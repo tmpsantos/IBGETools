@@ -73,6 +73,49 @@ class Map:
 
         return self._y
 
+    def GetWidth(self):
+        if self._width:
+            return self._width
+
+        map_geometry = self._GetMapGeometry()
+
+        offset = _MAGIC_COORDINATE_OFFSET_ * self._scale_factor
+        width = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
+        height = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
+
+        x_offset = map_geometry.xOff() + map_geometry.width()
+        y_offset = map_geometry.yOff() + map_geometry.height()
+
+        coordinate_geometry = Geometry(width, height,
+                x_offset - width, y_offset + offset / 2)
+
+        image = self._CropGeometry(coordinate_geometry)
+        self._width = self._ocr.GetDecimalDegrees(image) - self.GetX()
+
+        return self._width
+
+    def GetHeight(self):
+        if self._height:
+            return self._height
+
+        map_geometry = self._GetMapGeometry()
+
+        offset = _MAGIC_COORDINATE_OFFSET_ * self._scale_factor
+        width = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
+        height = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
+
+        x_offset = map_geometry.xOff() + map_geometry.width()
+        y_offset = map_geometry.yOff() + map_geometry.height()
+
+        coordinate_geometry = Geometry(width, height,
+                x_offset + offset / 2, y_offset - height)
+
+        image = self._CropGeometry(coordinate_geometry)
+        image.rotate(90)
+        self._height = self._ocr.GetDecimalDegrees(image) - self.GetY()
+
+        return self._height
+
     def _CropGeometry(self, geometry):
         if not self._map_image:
             self._GenerateImage()

@@ -1,11 +1,28 @@
 from PythonMagick import Geometry, Image
 from pyPdf import PdfFileReader
+from OCR import OCR
+
+# This is a naive attempt to find a generic offset and bounding box
+# that should work on every map format.
+_MAGIC_COORDINATE_OFFSET_ = 22
+_MAGIC_COORDINATE_BBOX_WIDTH_ = 50
+_MAGIC_COORDINATE_BBOX_HEIGHT_ = 15
+
 
 class Map:
     def __init__(self, map_path):
-        self._scale_factor = 1
         self._map_path = map_path
         self._map_image = None
+        self._ocr = OCR()
+
+        # The OCR gets a bit buggy for scale factors
+        # smallers than 4.
+        self._scale_factor = 4
+
+        self._x = 0.
+        self._y = 0.
+        self._width = 0.
+        self._height = 0.
 
     def IsValid(self):
         return self.WIDTH > 0
@@ -17,11 +34,51 @@ class Map:
             self._GenerateImage()
 
     def GetMapImage(self):
+        return self._CropGeometry(self._GetMapGeometry())
+
+    def GetX(self):
+        if self._x:
+            return self._x
+
+        map_geometry = self._GetMapGeometry()
+
+        offset = _MAGIC_COORDINATE_OFFSET_ * self._scale_factor
+        width = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
+        height = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
+
+        coordinate_geometry = Geometry(width, height,
+                map_geometry.xOff(), map_geometry.yOff() - offset)
+
+        image = self._CropGeometry(coordinate_geometry)
+        self._x = self._ocr.GetDecimalDegrees(image)
+
+        return self._x
+
+    def GetY(self):
+        if self._y:
+            return self._y
+
+        map_geometry = self._GetMapGeometry()
+
+        offset = _MAGIC_COORDINATE_OFFSET_ * self._scale_factor
+        width = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
+        height = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
+
+        coordinate_geometry = Geometry(width, height,
+                map_geometry.xOff() - offset, map_geometry.yOff())
+
+        image = self._CropGeometry(coordinate_geometry)
+        image.rotate(90)
+        self._y = self._ocr.GetDecimalDegrees(image)
+
+        return self._y
+
+    def _CropGeometry(self, geometry):
         if not self._map_image:
             self._GenerateImage()
 
-        image = self._map_image
-        image.crop(self._GetMapGeometry())
+        image = Image(self._map_image)
+        image.crop(geometry)
 
         return image
 

@@ -22,8 +22,8 @@ class Map:
         self._height = 0.
 
         # The OCR gets a bit buggy for scale factors
-        # smallers than 3 and bigger than 4.
-        self._scale_factor = 2
+        # smallers than 3 and bigger than 5.
+        self._scale_factor = 3
 
         self._RefreshCoordinates()
 

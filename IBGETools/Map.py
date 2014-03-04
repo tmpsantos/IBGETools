@@ -3,8 +3,9 @@ from pyPdf import PdfFileReader
 from OCR import OCR
 
 # This is a naive attempt to find a generic offset and bounding box
-# that should work on every map format.
-_MAGIC_COORDINATE_OFFSET_ = 22
+# that should work on every map format. The OFFSET here is the distance
+# in px from the coordinates label to the the rectangle containing the map.
+_MAGIC_COORDINATE_OFFSET_ = 10
 _MAGIC_COORDINATE_BBOX_WIDTH_ = 50
 _MAGIC_COORDINATE_BBOX_HEIGHT_ = 15
 
@@ -22,7 +23,7 @@ class Map:
         self._height = 0.
 
         # The OCR gets a bit buggy for scale factors
-        # smallers than 3 and bigger than 5.
+        # smaller than 3 and bigger than 5.
         self._scale_factor = 3
 
         self._RefreshCoordinates()
@@ -77,7 +78,7 @@ class Map:
         height = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
 
         coordinate_geometry = Geometry(width, height,
-                map_geometry.xOff(), map_geometry.yOff() - offset)
+                map_geometry.xOff(), map_geometry.yOff() - offset - height)
 
         image = self._CropGeometry(coordinate_geometry)
         self._x = self._ocr.GetDecimalDegrees(image)
@@ -95,7 +96,7 @@ class Map:
         height = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
 
         coordinate_geometry = Geometry(width, height,
-                map_geometry.xOff() - offset, map_geometry.yOff())
+                map_geometry.xOff() - offset - width, map_geometry.yOff())
 
         image = self._CropGeometry(coordinate_geometry)
         image.rotate(90)
@@ -117,9 +118,10 @@ class Map:
         y_offset = map_geometry.yOff() + map_geometry.height()
 
         coordinate_geometry = Geometry(width, height,
-                x_offset - width, y_offset + offset / 3)
+                x_offset - width, y_offset + offset)
 
         image = self._CropGeometry(coordinate_geometry)
+        image.write("width.gif")
         self._width = self._ocr.GetDecimalDegrees(image) - self.GetX()
 
         return self._width
@@ -138,7 +140,7 @@ class Map:
         y_offset = map_geometry.yOff() + map_geometry.height()
 
         coordinate_geometry = Geometry(width, height,
-                x_offset + offset / 2, y_offset - height)
+                x_offset + offset, y_offset - height)
 
         image = self._CropGeometry(coordinate_geometry)
         image.rotate(90)

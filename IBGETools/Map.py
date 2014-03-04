@@ -35,10 +35,10 @@ class Map:
         if self._width is 0 or self._height is 0:
             return False
 
-        if self.GetWidth() > 1 or self.GetWidth() < -1:
+        if abs(self.GetWidth()) > 0.04:
             return False
 
-        if self.GetHeight() > 1 or self.GetHeight() < -1:
+        if abs(self.GetHeight()) > 0.04:
             return False
 
         map_geometry = self._GetMapGeometry()

@@ -191,6 +191,19 @@ class Map:
         self._map_image.read(self._map_path)
 
 
+# The WIDTH and HEIGHT corresponds to the size of the PDF page. Every document
+# is expected to have a rectangle with a map inside, the MARGINs are the
+# distance from the borders of this rectangle to the corner of the page.
+class MapA4Portrait(Map):
+    WIDTH = 595
+    HEIGHT = 842
+
+    MARGIN_LEFT = 37
+    MARGIN_RIGHT = 27
+    MARGIN_TOP = 33
+    MARGIN_BOTTOM = 109
+
+
 class MapA4Landscape(Map):
     WIDTH = 842
     HEIGHT = 595
@@ -211,6 +224,36 @@ class MapA3Portrait(Map):
     MARGIN_BOTTOM = 168
 
 
+class MapA3Landscape(Map):
+    WIDTH = 1190
+    HEIGHT = 842
+
+    MARGIN_LEFT = 58
+    MARGIN_RIGHT = 61
+    MARGIN_TOP = 51
+    MARGIN_BOTTOM = 169
+
+
+class MapA2Portrait(Map):
+    WIDTH = 1190
+    HEIGHT = 1684
+
+    MARGIN_LEFT = 56
+    MARGIN_RIGHT = 42
+    MARGIN_TOP = 68
+    MARGIN_BOTTOM = 216
+
+
+class MapA2Landscape(Map):
+    WIDTH = 1684
+    HEIGHT = 1190
+
+    MARGIN_LEFT = 56
+    MARGIN_RIGHT = 59
+    MARGIN_TOP = 63
+    MARGIN_BOTTOM = 215
+
+
 def MapFactory(map_path):
     map_pdf = PdfFileReader(file(map_path, "rb"))
 
@@ -221,9 +264,17 @@ def MapFactory(map_path):
     width = map_page.bleedBox.getWidth()
     height = map_page.bleedBox.getHeight()
 
+    if (width == MapA4Portrait.WIDTH and height == MapA4Portrait.HEIGHT):
+        return MapA4Portrait(map_path)
     if (width == MapA4Landscape.WIDTH and height == MapA4Landscape.HEIGHT):
         return MapA4Landscape(map_path)
     if (width == MapA3Portrait.WIDTH and height == MapA3Portrait.HEIGHT):
         return MapA3Portrait(map_path)
+    if (width == MapA3Landscape.WIDTH and height == MapA3Landscape.HEIGHT):
+        return MapA3Landscape(map_path)
+    if (width == MapA2Portrait.WIDTH and height == MapA2Portrait.HEIGHT):
+        return MapA2Portrait(map_path)
+    if (width == MapA2Landscape.WIDTH and height == MapA2Landscape.HEIGHT):
+        return MapA2Landscape(map_path)
     else:
         return None

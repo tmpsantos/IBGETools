@@ -19,9 +19,9 @@ class OCR:
 
     def GetDecimalDegrees(self, image):
         blob = Blob()
+
         image.magick("PNG")
         image.quality(100)
-
         image.write(blob)
 
         tesseract.ProcessPagesBuffer(blob.data, blob.length(), self._api)

@@ -48,7 +48,7 @@ class Map:
 
         # The ratio should not be very different from each other, otherwise
         # we OCR'ed one of the coordinates wrong.
-        if (abs(height_pixel_ratio) - abs(width_pixel_ratio)) > 0.000001:
+        if (abs(height_pixel_ratio) - abs(width_pixel_ratio)) > 0.0001:
             return False
 
         return True

@@ -13,25 +13,53 @@ class Map:
     def __init__(self, map_path):
         self._map_path = map_path
         self._map_image = None
-        self._ocr = OCR()
 
-        # The OCR gets a bit buggy for scale factors
-        # smallers than 4.
-        self._scale_factor = 4
+        self._ocr = OCR()
+        self._ocr_is_broken = False
 
         self._x = 0.
         self._y = 0.
         self._width = 0.
         self._height = 0.
 
+        # The OCR gets a bit buggy for scale factors
+        # smallers than 3 and bigger than 4.
+        self._scale_factor = 4
+
+        self._RefreshCoordinates()
+
     def IsValid(self):
-        return self.WIDTH > 0
+        if self._x is 0 or self._x is 0:
+            return False
+
+        if self._ocr_is_broken:
+            return False
+
+        if self.GetWidth() > 1 or self.GetWidth() < -1:
+            return False
+
+        if self.GetHeight() > 1 or self.GetHeight() < -1:
+            return False
+
+        map_geometry = self._GetMapGeometry()
+
+        height_pixel_ratio = self.GetHeight() / map_geometry.height()
+        width_pixel_ratio = self.GetWidth() / map_geometry.width()
+
+        # The ratio should not be very different from each other, otherwise
+        # we OCR'ed one of the coordinates wrong.
+        if (abs(height_pixel_ratio) - abs(width_pixel_ratio)) > 0.000001:
+            return False
+
+        return True
 
     def SetScaleFactor(self, factor):
         self._scale_factor = factor
 
         if self._map_image:
             self._GenerateImage()
+
+        self._RefreshCoordinates()
 
     def GetMapImage(self):
         return self._CropGeometry(self._GetMapGeometry())
@@ -87,7 +115,7 @@ class Map:
         y_offset = map_geometry.yOff() + map_geometry.height()
 
         coordinate_geometry = Geometry(width, height,
-                x_offset - width, y_offset + offset / 2)
+                x_offset - width, y_offset + offset / 3)
 
         image = self._CropGeometry(coordinate_geometry)
         self._width = self._ocr.GetDecimalDegrees(image) - self.GetX()
@@ -115,6 +143,22 @@ class Map:
         self._height = self._ocr.GetDecimalDegrees(image) - self.GetY()
 
         return self._height
+
+    def _RefreshCoordinates(self):
+        if self.IsValid():
+            return
+
+        self._x = 0.
+        self._y = 0.
+        self._width = 0.
+        self._height = 0.
+        self._ocr_is_broken = False
+
+        try:
+            self.GetWidth()
+            self.GetHeight()
+        except:
+            self._ocr_is_broken = True
 
     def _CropGeometry(self, geometry):
         if not self._map_image:

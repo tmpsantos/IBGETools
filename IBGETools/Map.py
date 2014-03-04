@@ -54,6 +54,9 @@ class Map:
         return True
 
     def SetScaleFactor(self, factor):
+        if factor is self._scale_factor:
+            return
+
         self._scale_factor = factor
 
         if self._map_image:

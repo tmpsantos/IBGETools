@@ -144,16 +144,6 @@ class Map:
         self._map_image.read(self._map_path)
 
 
-class MapInvalid(Map):
-    WIDTH = 0
-    HEIGHT = 0
-
-    MARGIN_LEFT = 0
-    MARGIN_RIGHT = 0
-    MARGIN_TOP = 0
-    MARGIN_BOTTOM = 0
-
-
 class MapA4Landscape(Map):
     WIDTH = 842
     HEIGHT = 595
@@ -189,4 +179,4 @@ def MapFactory(map_path):
     if (width == MapA3Portrait.WIDTH and height == MapA3Portrait.HEIGHT):
         return MapA3Portrait(map_path)
     else:
-        return MapInvalid(map_path)
+        return None

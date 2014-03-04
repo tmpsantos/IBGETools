@@ -15,7 +15,6 @@ class Map:
         self._map_image = None
 
         self._ocr = OCR()
-        self._ocr_is_broken = False
 
         self._x = 0.
         self._y = 0.
@@ -24,15 +23,15 @@ class Map:
 
         # The OCR gets a bit buggy for scale factors
         # smallers than 3 and bigger than 4.
-        self._scale_factor = 4
+        self._scale_factor = 2
 
         self._RefreshCoordinates()
 
     def IsValid(self):
-        if self._x is 0 or self._x is 0:
+        if self._x is 0 or self._y is 0:
             return False
 
-        if self._ocr_is_broken:
+        if self._width is 0 or self._height is 0:
             return False
 
         if self.GetWidth() > 1 or self.GetWidth() < -1:
@@ -155,13 +154,9 @@ class Map:
         self._y = 0.
         self._width = 0.
         self._height = 0.
-        self._ocr_is_broken = False
 
-        try:
-            self.GetWidth()
-            self.GetHeight()
-        except:
-            self._ocr_is_broken = True
+        self.GetWidth()
+        self.GetHeight()
 
     def _CropGeometry(self, geometry):
         if not self._map_image:

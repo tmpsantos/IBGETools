@@ -31,9 +31,12 @@ class OCR:
         return self._ConvertToDecimalDegrees(coordinates)
 
     def _ConvertToDecimalDegrees(self, coordinates):
-        degrees = float(coordinates[0])
-        minutes = float(coordinates[1]) / 60
-        seconds = float(coordinates[2]) / 3600
+        try:
+            degrees = float(coordinates[0])
+            minutes = float(coordinates[1]) / 60
+            seconds = float(coordinates[2]) / 3600
+        except:
+            return 0
 
         if (degrees > 0):
             degrees *= -1

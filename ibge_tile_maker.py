@@ -1,19 +1,21 @@
 #!/usr/bin/python
 
 import sys
+import os
 
 from IBGETools.Map import MapFactory
 
 map_path = sys.argv[1]
 ibge_map = MapFactory(map_path)
 
-if not ibge_map.IsValid():
+if not ibge_map:
     sys.exit(1)
 
-print ibge_map.GetX()
-print ibge_map.GetY()
-print ibge_map.GetWidth()
-print ibge_map.GetHeight()
+if not ibge_map.IsValid():
+    ibge_map.SetScaleFactor(3)
 
-image = ibge_map.GetMapImage()
-image.write(map_path + ".gif")
+if not ibge_map.IsValid():
+    ibge_map.SetScaleFactor(5)
+
+if not ibge_map.IsValid():
+    print "Error parsing: " + map_path

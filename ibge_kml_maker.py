@@ -20,7 +20,7 @@ def GetMapFromPath(map_path):
         ibge_map.SetScaleFactor(4)
 
     if not ibge_map.IsValid():
-        ibge_map.SetScaleFactor(5)
+        ibge_map.SetScaleFactor(3)
 
     if not ibge_map.IsValid():
         print >> sys.stderr, "Error parsing: " + map_path

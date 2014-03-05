@@ -24,7 +24,7 @@ class Map:
 
         # The OCR gets a bit buggy for scale factors
         # smaller than 3 and bigger than 5.
-        self._scale_factor = 3
+        self._scale_factor = 5
 
         self._RefreshCoordinates()
 

@@ -20,6 +20,11 @@ class OCR:
     def GetDecimalDegrees(self, image):
         blob = Blob()
 
+        # Remove a bit of the anti-aliasing. After this, I got better
+        # results distinguishing the 3 from the 8.
+        image.sharpen()
+        image.sharpen()
+
         image.magick("PNG")
         image.quality(100)
         image.write(blob)

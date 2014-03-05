@@ -24,6 +24,8 @@ class OCR:
         # results distinguishing the 3 from the 8.
         image.sharpen()
         image.sharpen()
+        image.sharpen()
+        image.sharpen()
 
         image.magick("PNG")
         image.quality(100)

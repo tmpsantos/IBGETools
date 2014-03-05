@@ -121,7 +121,6 @@ class Map:
                 x_offset - width, y_offset + offset)
 
         image = self._CropGeometry(coordinate_geometry)
-        image.write("width.gif")
         self._width = self._ocr.GetDecimalDegrees(image) - self.GetX()
 
         return self._width

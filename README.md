@@ -3,6 +3,8 @@ IBGETools
 
 ## ibge_kml_maker.py
 
+![alt tag](https://raw.github.com/tmpsantos/IBGETools/master/docs/screenshot.png)
+
 ### Ache o código da cidade no site do IBGE:
 
 http://www.ibge.gov.br/home/geociencias/areaterritorial/area.shtm

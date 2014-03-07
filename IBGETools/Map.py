@@ -254,7 +254,7 @@ def MapFactory(map_path):
     map_pdf = PdfFileReader(file(map_path, "rb"))
 
     if not map_pdf or not map_pdf.getNumPages() is 1:
-        return MapInvalid(map_path)
+        return None
 
     map_page = map_pdf.getPage(0)
     width = map_page.bleedBox.getWidth()

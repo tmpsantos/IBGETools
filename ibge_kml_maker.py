@@ -14,14 +14,6 @@ def GetMapFromPath(map_path):
         print >> sys.stderr, "Not supported: " + map_path
         return ibge_map
 
-    # Brute force some scale factors in a attempt to get
-    # the coordinated recognized by the OCR.
-    if not ibge_map.IsValid():
-        ibge_map.SetScaleFactor(4)
-
-    if not ibge_map.IsValid():
-        ibge_map.SetScaleFactor(3)
-
     if not ibge_map.IsValid():
         print >> sys.stderr, "Error parsing: " + map_path
         return None
@@ -30,10 +22,6 @@ def GetMapFromPath(map_path):
 
 
 def SaveMapImage(basename, ibge_map):
-    # Restore the default scale factor before saving to disk,
-    # we don't want terabytes of maps.
-    ibge_map.SetScaleFactor(3)
-
     image = ibge_map.GetMapImage()
     image.write("%s.png" % basename)
 

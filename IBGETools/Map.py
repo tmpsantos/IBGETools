@@ -1,19 +1,20 @@
-from PythonMagick import Geometry, Image
-from pyPdf import PdfFileReader
+import StringIO
+from PythonMagick import Blob, Geometry, Image
+from pdfminer.pdfparser import PDFDocument, PDFParser, PDFStream
+
 from OCR import OCR
 
 # This is a naive attempt to find a generic offset and bounding box
 # that should work on every map format. The OFFSET here is the distance
 # in px from the coordinates label to the the rectangle containing the map.
-_MAGIC_COORDINATE_OFFSET_ = 10
-_MAGIC_COORDINATE_BBOX_WIDTH_ = 50
-_MAGIC_COORDINATE_BBOX_HEIGHT_ = 15
+_MAGIC_COORDINATE_OFFSET_ = 40
+_MAGIC_COORDINATE_BBOX_WIDTH_ = 200
+_MAGIC_COORDINATE_BBOX_HEIGHT_ = 40
 
 
 class Map:
-    def __init__(self, map_path):
-        self._map_path = map_path
-        self._map_image = None
+    def __init__(self, map_image):
+        self._map_image = map_image
 
         self._ocr = OCR()
 
@@ -53,17 +54,6 @@ class Map:
 
         return True
 
-    def SetScaleFactor(self, factor):
-        if factor is self._scale_factor:
-            return
-
-        self._scale_factor = factor
-
-        if self._map_image:
-            self._GenerateImage()
-
-        self._RefreshCoordinates()
-
     def GetMapImage(self):
         return self._CropGeometry(self._GetMapGeometry())
 
@@ -73,9 +63,9 @@ class Map:
 
         map_geometry = self._GetMapGeometry()
 
-        offset = _MAGIC_COORDINATE_OFFSET_ * self._scale_factor
-        width = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
-        height = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
+        offset = _MAGIC_COORDINATE_OFFSET_
+        width = _MAGIC_COORDINATE_BBOX_WIDTH_
+        height = _MAGIC_COORDINATE_BBOX_HEIGHT_
 
         coordinate_geometry = Geometry(width, height,
                 map_geometry.xOff(), map_geometry.yOff() - offset - height)
@@ -91,9 +81,9 @@ class Map:
 
         map_geometry = self._GetMapGeometry()
 
-        offset = _MAGIC_COORDINATE_OFFSET_ * self._scale_factor
-        width = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
-        height = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
+        offset = _MAGIC_COORDINATE_OFFSET_
+        width = _MAGIC_COORDINATE_BBOX_HEIGHT_
+        height = _MAGIC_COORDINATE_BBOX_WIDTH_
 
         coordinate_geometry = Geometry(width, height,
                 map_geometry.xOff() - offset - width, map_geometry.yOff())
@@ -110,9 +100,9 @@ class Map:
 
         map_geometry = self._GetMapGeometry()
 
-        offset = _MAGIC_COORDINATE_OFFSET_ * self._scale_factor
-        width = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
-        height = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
+        offset = _MAGIC_COORDINATE_OFFSET_
+        width = _MAGIC_COORDINATE_BBOX_WIDTH_
+        height = _MAGIC_COORDINATE_BBOX_HEIGHT_
 
         x_offset = map_geometry.xOff() + map_geometry.width()
         y_offset = map_geometry.yOff() + map_geometry.height()
@@ -130,10 +120,11 @@ class Map:
             return self._height
 
         map_geometry = self._GetMapGeometry()
+        image = self._CropGeometry(map_geometry)
 
-        offset = _MAGIC_COORDINATE_OFFSET_ * self._scale_factor
-        width = _MAGIC_COORDINATE_BBOX_HEIGHT_ * self._scale_factor
-        height = _MAGIC_COORDINATE_BBOX_WIDTH_ * self._scale_factor
+        offset = _MAGIC_COORDINATE_OFFSET_
+        width = _MAGIC_COORDINATE_BBOX_HEIGHT_
+        height = _MAGIC_COORDINATE_BBOX_WIDTH_
 
         x_offset = map_geometry.xOff() + map_geometry.width()
         y_offset = map_geometry.yOff() + map_geometry.height()
@@ -160,9 +151,6 @@ class Map:
         self.GetHeight()
 
     def _CropGeometry(self, geometry):
-        if not self._map_image:
-            self._GenerateImage()
-
         image = Image(self._map_image)
         image.crop(geometry)
 
@@ -172,105 +160,126 @@ class Map:
         width = self.WIDTH - self.MARGIN_LEFT - self.MARGIN_RIGHT
         height = self.HEIGHT - self.MARGIN_TOP - self.MARGIN_BOTTOM
 
-        width *= self._scale_factor
-        height *= self._scale_factor
-        margin_left = self.MARGIN_LEFT * self._scale_factor
-        margin_top = self.MARGIN_TOP * self._scale_factor
-
-        return Geometry(width, height, margin_left, margin_top)
-
-    def _GenerateImage(self):
-        scaled_density = 72 * self._scale_factor
-
-        self._map_image = Image()
-        self._map_image.density("%dx%d" % (scaled_density, scaled_density))
-        self._map_image.read(self._map_path)
+        return Geometry(width, height, self.MARGIN_LEFT, self.MARGIN_TOP)
 
 
 # The WIDTH and HEIGHT corresponds to the size of the PDF page. Every document
 # is expected to have a rectangle with a map inside, the MARGINs are the
 # distance from the borders of this rectangle to the corner of the page.
 class MapA4Portrait(Map):
-    WIDTH = 595
-    HEIGHT = 842
+    WIDTH = 2480
+    HEIGHT = 3508
 
-    MARGIN_LEFT = 37
-    MARGIN_RIGHT = 27
-    MARGIN_TOP = 33
-    MARGIN_BOTTOM = 109
+    MARGIN_LEFT = 152
+    MARGIN_RIGHT = 112
+    MARGIN_TOP = 137
+    MARGIN_BOTTOM = 452
 
 
 class MapA4Landscape(Map):
-    WIDTH = 842
-    HEIGHT = 595
+    WIDTH = 3508
+    HEIGHT = 2480
 
-    MARGIN_LEFT = 37
-    MARGIN_RIGHT = 33
-    MARGIN_TOP = 38
-    MARGIN_BOTTOM = 109
+    MARGIN_LEFT = 153
+    MARGIN_RIGHT = 135
+    MARGIN_TOP = 157
+    MARGIN_BOTTOM = 451
 
 
 class MapA3Portrait(Map):
-    WIDTH = 842
-    HEIGHT = 1190
+    WIDTH = 3508
+    HEIGHT = 4961
 
-    MARGIN_LEFT = 60
-    MARGIN_RIGHT = 40
-    MARGIN_TOP = 44
-    MARGIN_BOTTOM = 168
+    MARGIN_LEFT = 248
+    MARGIN_RIGHT = 166
+    MARGIN_TOP = 184
+    MARGIN_BOTTOM = 704
 
 
 class MapA3Landscape(Map):
-    WIDTH = 1190
-    HEIGHT = 842
+    WIDTH = 4961
+    HEIGHT = 3508
 
-    MARGIN_LEFT = 58
-    MARGIN_RIGHT = 61
-    MARGIN_TOP = 51
-    MARGIN_BOTTOM = 169
+    MARGIN_LEFT = 249
+    MARGIN_RIGHT = 254
+    MARGIN_TOP = 213
+    MARGIN_BOTTOM = 703
 
 
 class MapA2Portrait(Map):
-    WIDTH = 1190
-    HEIGHT = 1684
+    WIDTH = 4961
+    HEIGHT = 7016
 
-    MARGIN_LEFT = 56
-    MARGIN_RIGHT = 42
-    MARGIN_TOP = 68
-    MARGIN_BOTTOM = 216
+    MARGIN_LEFT = 230
+    MARGIN_RIGHT = 174
+    MARGIN_TOP = 283
+    MARGIN_BOTTOM = 899
 
 
 class MapA2Landscape(Map):
-    WIDTH = 1684
-    HEIGHT = 1190
+    WIDTH = 7016
+    HEIGHT = 4961
 
-    MARGIN_LEFT = 56
-    MARGIN_RIGHT = 59
-    MARGIN_TOP = 63
-    MARGIN_BOTTOM = 215
+    MARGIN_LEFT = 230
+    MARGIN_RIGHT = 242
+    MARGIN_TOP = 259
+    MARGIN_BOTTOM = 898
+
+
+def _MakePPMImage(width, height, data):
+    buffer = StringIO.StringIO()
+
+    buffer.write("P6\n")
+    buffer.write("%d %d\n" % (width, height))
+    buffer.write("255\n")
+    buffer.write(data)
+
+    return Image(Blob(buffer.getvalue()))
 
 
 def MapFactory(map_path):
-    map_pdf = PdfFileReader(file(map_path, "rb"))
-
-    if not map_pdf or not map_pdf.getNumPages() is 1:
+    try:
+        map_file = file(map_path, "rb")
+    except:
         return None
 
-    map_page = map_pdf.getPage(0)
-    width = map_page.bleedBox.getWidth()
-    height = map_page.bleedBox.getHeight()
+    document = PDFDocument()
+
+    parser = PDFParser(map_file)
+    parser.set_document(document)
+
+    document.set_parser(parser)
+    document.initialize("")
+
+    # The image object on all IBGE PDFs is indexed
+    # at ID 6. We also probe for a few properties.
+    obj = document.getobj(6)
+    if not obj or not isinstance(obj, PDFStream):
+        return None
+
+    if not "Width" in obj:
+        return None
+    if not "Height" in obj:
+        return None
+    if not "ColorSpace" in obj:
+        return None
+
+    width = obj["Width"]
+    height = obj["Height"]
+
+    image = _MakePPMImage(width, height, obj.get_data())
 
     if (width == MapA4Portrait.WIDTH and height == MapA4Portrait.HEIGHT):
-        return MapA4Portrait(map_path)
+        return MapA4Portrait(_MakePPMImage(width, height, obj.get_data()))
     if (width == MapA4Landscape.WIDTH and height == MapA4Landscape.HEIGHT):
-        return MapA4Landscape(map_path)
+        return MapA4Landscape(_MakePPMImage(width, height, obj.get_data()))
     if (width == MapA3Portrait.WIDTH and height == MapA3Portrait.HEIGHT):
-        return MapA3Portrait(map_path)
+        return MapA3Portrait(_MakePPMImage(width, height, obj.get_data()))
     if (width == MapA3Landscape.WIDTH and height == MapA3Landscape.HEIGHT):
-        return MapA3Landscape(map_path)
+        return MapA3Landscape(_MakePPMImage(width, height, obj.get_data()))
     if (width == MapA2Portrait.WIDTH and height == MapA2Portrait.HEIGHT):
-        return MapA2Portrait(map_path)
+        return MapA2Portrait(_MakePPMImage(width, height, obj.get_data()))
     if (width == MapA2Landscape.WIDTH and height == MapA2Landscape.HEIGHT):
-        return MapA2Landscape(map_path)
+        return MapA2Landscape(_MakePPMImage(width, height, obj.get_data()))
     else:
         return None

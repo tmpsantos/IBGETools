@@ -21,9 +21,9 @@ Atenção! Use o arquivo do **censo_2010**.
 
 Testado no Ubuntu 13.10 em um Intel 64-bits:
 
-* python-pypdf
+* python-pdfminer
 
-`$ sudo apt-get install python-pypdf`
+`$ sudo apt-get install python-pdfminer`
 
 * python-pythonmagick
 

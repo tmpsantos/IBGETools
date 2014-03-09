@@ -15,7 +15,6 @@ _BBOX_HEIGHT_ = 40
 class Map:
     def __init__(self, map_image):
         self._map_image = map_image
-
         self._ocr = OCR()
 
         self._x = 0.
@@ -23,17 +22,14 @@ class Map:
         self._width = 0.
         self._height = 0.
 
-        # The OCR gets a bit buggy for scale factors
-        # smaller than 3 and bigger than 5.
-        self._scale_factor = 5
-
-        self._RefreshCoordinates()
+        self.GetWidth()
+        self.GetHeight()
 
     def IsValid(self):
-        if self._x is 0 or self._y is 0:
+        if self._x == 0 or self._y == 0:
             return False
 
-        if self._width is 0 or self._height is 0:
+        if self._width == 0 or self._height == 0:
             return False
 
         if self._width < 0.001 or self._width > 0.04:
@@ -137,18 +133,6 @@ class Map:
         self._height = self._ocr.GetDecimalDegrees(image) - self.GetY()
 
         return self._height
-
-    def _RefreshCoordinates(self):
-        if self.IsValid():
-            return
-
-        self._x = 0.
-        self._y = 0.
-        self._width = 0.
-        self._height = 0.
-
-        self.GetWidth()
-        self.GetHeight()
 
     def _CropGeometry(self, geometry):
         image = Image(self._map_image)
@@ -266,8 +250,6 @@ def MapFactory(map_path):
 
     width = obj["Width"]
     height = obj["Height"]
-
-    image = _MakePPMImage(width, height, obj.get_data())
 
     if (width == MapA4Portrait.WIDTH and height == MapA4Portrait.HEIGHT):
         return MapA4Portrait(_MakePPMImage(width, height, obj.get_data()))

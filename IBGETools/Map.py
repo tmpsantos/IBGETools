@@ -32,10 +32,10 @@ class Map:
         if self._width == 0 or self._height == 0:
             return False
 
-        if self._width < 0.001 or self._width > 0.04:
+        if self._width < 0.001 or self._width > 0.05:
             return False
 
-        if self._height > -0.001 or self._height < -0.04:
+        if self._height > -0.001 or self._height < -0.05:
             return False
 
         map_geometry = self._GetMapGeometry()
@@ -210,6 +210,16 @@ class MapA2Landscape(Map):
     MARGIN_BOTTOM = 898
 
 
+class MapA1Portrait(Map):
+    WIDTH = 7016
+    HEIGHT = 9933
+
+    MARGIN_LEFT = 373
+    MARGIN_RIGHT = 287
+    MARGIN_TOP = 416
+    MARGIN_BOTTOM = 1320
+
+
 def _MakePPMImage(width, height, data):
     buffer = StringIO.StringIO()
 
@@ -263,5 +273,7 @@ def MapFactory(map_path):
         return MapA2Portrait(_MakePPMImage(width, height, obj.get_data()))
     if (width == MapA2Landscape.WIDTH and height == MapA2Landscape.HEIGHT):
         return MapA2Landscape(_MakePPMImage(width, height, obj.get_data()))
+    if (width == MapA1Portrait.WIDTH and height == MapA1Portrait.HEIGHT):
+        return MapA1Portrait(_MakePPMImage(width, height, obj.get_data()))
     else:
         return None

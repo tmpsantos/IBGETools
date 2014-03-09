@@ -7,9 +7,9 @@ from OCR import OCR
 # This is a naive attempt to find a generic offset and bounding box
 # that should work on every map format. The OFFSET here is the distance
 # in px from the coordinates label to the the rectangle containing the map.
-_MAGIC_COORDINATE_OFFSET_ = 40
-_MAGIC_COORDINATE_BBOX_WIDTH_ = 200
-_MAGIC_COORDINATE_BBOX_HEIGHT_ = 40
+_BBOX_OFFSET_ = 40
+_BBOX_WIDTH_ = 200
+_BBOX_HEIGHT_ = 40
 
 
 class Map:
@@ -63,9 +63,9 @@ class Map:
 
         map_geometry = self._GetMapGeometry()
 
-        offset = _MAGIC_COORDINATE_OFFSET_
-        width = _MAGIC_COORDINATE_BBOX_WIDTH_
-        height = _MAGIC_COORDINATE_BBOX_HEIGHT_
+        offset = _BBOX_OFFSET_
+        width = _BBOX_WIDTH_
+        height = _BBOX_HEIGHT_
 
         coordinate_geometry = Geometry(width, height,
                 map_geometry.xOff(), map_geometry.yOff() - offset - height)
@@ -81,9 +81,9 @@ class Map:
 
         map_geometry = self._GetMapGeometry()
 
-        offset = _MAGIC_COORDINATE_OFFSET_
-        width = _MAGIC_COORDINATE_BBOX_HEIGHT_
-        height = _MAGIC_COORDINATE_BBOX_WIDTH_
+        offset = _BBOX_OFFSET_
+        width = _BBOX_HEIGHT_
+        height = _BBOX_WIDTH_
 
         coordinate_geometry = Geometry(width, height,
                 map_geometry.xOff() - offset - width, map_geometry.yOff())
@@ -100,9 +100,9 @@ class Map:
 
         map_geometry = self._GetMapGeometry()
 
-        offset = _MAGIC_COORDINATE_OFFSET_
-        width = _MAGIC_COORDINATE_BBOX_WIDTH_
-        height = _MAGIC_COORDINATE_BBOX_HEIGHT_
+        offset = _BBOX_OFFSET_
+        width = _BBOX_WIDTH_
+        height = _BBOX_HEIGHT_
 
         x_offset = map_geometry.xOff() + map_geometry.width()
         y_offset = map_geometry.yOff() + map_geometry.height()
@@ -122,9 +122,9 @@ class Map:
         map_geometry = self._GetMapGeometry()
         image = self._CropGeometry(map_geometry)
 
-        offset = _MAGIC_COORDINATE_OFFSET_
-        width = _MAGIC_COORDINATE_BBOX_HEIGHT_
-        height = _MAGIC_COORDINATE_BBOX_WIDTH_
+        offset = _BBOX_OFFSET_
+        width = _BBOX_HEIGHT_
+        height = _BBOX_WIDTH_
 
         x_offset = map_geometry.xOff() + map_geometry.width()
         y_offset = map_geometry.yOff() + map_geometry.height()

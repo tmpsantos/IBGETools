@@ -35,10 +35,8 @@ class OCR:
         except:
             return 0
 
-        if (degrees > 0):
-            degrees *= -1
-
-        minutes *= -1
-        seconds *= -1
+        if (degrees < 0):
+            minutes *= -1
+            seconds *= -1
 
         return degrees + minutes + seconds

@@ -25,9 +25,9 @@ Testado no Ubuntu 13.10 em um Intel 64-bits:
 
 `$ sudo apt-get install python-pdfminer`
 
-* python-pythonmagick
+* python-wand
 
-`$ sudo apt-get install python-pythonmagick`
+`$ sudo apt-get install python-wand`
 
 * python-tesseract
 

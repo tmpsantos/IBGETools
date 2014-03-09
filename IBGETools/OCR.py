@@ -3,8 +3,6 @@
 import re
 import tesseract
 
-from PythonMagick import Blob
-
 
 class OCR:
     def __init__(self):
@@ -18,10 +16,9 @@ class OCR:
         self._api = api
 
     def GetDecimalDegrees(self, image):
-        blob = Blob()
-        image.write(blob)
+        buffer = image.make_blob()
 
-        tesseract.ProcessPagesBuffer(blob.data, blob.length(), self._api)
+        tesseract.ProcessPagesBuffer(buffer, len(buffer), self._api)
         text = self._api.GetUTF8Text().replace(' ', '')
         coordinates = re.split("°|'|\"| ", text)[:3]
 

@@ -1,5 +1,5 @@
 import StringIO
-from PythonMagick import Blob, Geometry, Image
+from wand.image import Image
 from pdfminer.pdfparser import PDFDocument, PDFParser, PDFStream
 
 from OCR import OCR
@@ -10,6 +10,14 @@ from OCR import OCR
 _BBOX_OFFSET_ = 40
 _BBOX_WIDTH_ = 200
 _BBOX_HEIGHT_ = 40
+
+
+class _Geometry:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
 
 
 class Map:
@@ -40,8 +48,8 @@ class Map:
 
         map_geometry = self._GetMapGeometry()
 
-        height_pixel_ratio = self.GetHeight() / map_geometry.height()
-        width_pixel_ratio = self.GetWidth() / map_geometry.width()
+        height_pixel_ratio = self.GetHeight() / map_geometry.height
+        width_pixel_ratio = self.GetWidth() / map_geometry.width
 
         # The ratio should not be very different from each other, otherwise
         # we OCR'ed one of the coordinates wrong.
@@ -63,8 +71,8 @@ class Map:
         width = _BBOX_WIDTH_
         height = _BBOX_HEIGHT_
 
-        coordinate_geometry = Geometry(width, height,
-                map_geometry.xOff(), map_geometry.yOff() - offset - height)
+        coordinate_geometry = _Geometry(map_geometry.x,
+                map_geometry.y - offset - height, width, height)
 
         image = self._CropGeometry(coordinate_geometry)
         self._x = self._ocr.GetDecimalDegrees(image)
@@ -81,8 +89,8 @@ class Map:
         width = _BBOX_HEIGHT_
         height = _BBOX_WIDTH_
 
-        coordinate_geometry = Geometry(width, height,
-                map_geometry.xOff() - offset - width, map_geometry.yOff())
+        coordinate_geometry = _Geometry(map_geometry.x - offset - width,
+                map_geometry.y, width, height)
 
         image = self._CropGeometry(coordinate_geometry)
         image.rotate(90)
@@ -100,11 +108,11 @@ class Map:
         width = _BBOX_WIDTH_
         height = _BBOX_HEIGHT_
 
-        x_offset = map_geometry.xOff() + map_geometry.width()
-        y_offset = map_geometry.yOff() + map_geometry.height()
+        x_offset = map_geometry.x + map_geometry.width
+        y_offset = map_geometry.y + map_geometry.height
 
-        coordinate_geometry = Geometry(width, height,
-                x_offset - width, y_offset + offset)
+        coordinate_geometry = _Geometry(x_offset - width, y_offset + offset,
+                width, height)
 
         image = self._CropGeometry(coordinate_geometry)
         self._width = self._ocr.GetDecimalDegrees(image) - self.GetX()
@@ -116,17 +124,16 @@ class Map:
             return self._height
 
         map_geometry = self._GetMapGeometry()
-        image = self._CropGeometry(map_geometry)
 
         offset = _BBOX_OFFSET_
         width = _BBOX_HEIGHT_
         height = _BBOX_WIDTH_
 
-        x_offset = map_geometry.xOff() + map_geometry.width()
-        y_offset = map_geometry.yOff() + map_geometry.height()
+        x_offset = map_geometry.x + map_geometry.width
+        y_offset = map_geometry.y + map_geometry.height
 
-        coordinate_geometry = Geometry(width, height,
-                x_offset + offset, y_offset - height)
+        coordinate_geometry = _Geometry(x_offset + offset, y_offset - height,
+                width, height)
 
         image = self._CropGeometry(coordinate_geometry)
         image.rotate(90)
@@ -135,16 +142,18 @@ class Map:
         return self._height
 
     def _CropGeometry(self, geometry):
-        image = Image(self._map_image)
-        image.crop(geometry)
+        x1 = geometry.x
+        y1 = geometry.y
+        x2 = geometry.x + geometry.width
+        y2 = geometry.y + geometry.height
 
-        return image
+        return self._map_image[x1:x2, y1:y2]
 
     def _GetMapGeometry(self):
         width = self.WIDTH - self.MARGIN_LEFT - self.MARGIN_RIGHT
         height = self.HEIGHT - self.MARGIN_TOP - self.MARGIN_BOTTOM
 
-        return Geometry(width, height, self.MARGIN_LEFT, self.MARGIN_TOP)
+        return _Geometry(self.MARGIN_LEFT, self.MARGIN_TOP, width, height)
 
 
 # The WIDTH and HEIGHT corresponds to the size of the PDF page. Every document
@@ -228,7 +237,10 @@ def _MakePPMImage(width, height, data):
     buffer.write("255\n")
     buffer.write(data)
 
-    return Image(Blob(buffer.getvalue()))
+    image = Image()
+    image.read(blob=buffer.getvalue())
+
+    return image
 
 
 def MapFactory(map_path):

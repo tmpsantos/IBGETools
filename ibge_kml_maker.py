@@ -23,7 +23,8 @@ def GetMapFromPath(map_path):
 
 def SaveMapImage(basename, ibge_map):
     image = ibge_map.GetMapImage()
-    image.write("%s.png" % basename)
+    image.resize(image.width / 3 * 2, image.height / 3 * 2)
+    image.save(filename="%s.png" % basename)
 
 
 def DumpGroundOverlay(basename, ibge_map):

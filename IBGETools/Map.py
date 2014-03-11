@@ -34,6 +34,9 @@ class Map:
         self.GetHeight()
 
     def IsValid(self):
+        if not self._map_image:
+            return False
+
         if self._x == 0 or self._y == 0:
             return False
 
@@ -58,7 +61,18 @@ class Map:
 
         return True
 
+    def Dispose(self):
+        self._map_image.close()
+        self._map_image = None
+
     def GetMapImage(self):
+        if not self.IsValid():
+            return None
+
+        # The reality here is we store a bit more than just the
+        # map image, but the whole contents of the PDF including
+        # the coordinates, logos, etc. So when the map is requested,
+        # we need to slice it from this image.
         return self._CropGeometry(self._GetMapGeometry())
 
     def GetX(self):

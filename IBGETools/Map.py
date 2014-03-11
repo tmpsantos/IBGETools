@@ -21,8 +21,9 @@ class _Geometry:
 
 
 class Map:
-    def __init__(self, map_image):
+    def __init__(self, map_image, map_path):
         self._map_image = map_image
+        self._map_path = map_path
         self._ocr = OCR()
 
         self._x = 0.
@@ -64,6 +65,9 @@ class Map:
     def Dispose(self):
         self._map_image.close()
         self._map_image = None
+
+    def GetPath(self):
+        return self._map_path
 
     def GetMapImage(self):
         if not self.IsValid():
@@ -286,20 +290,23 @@ def MapFactory(map_path):
 
     width = obj["Width"]
     height = obj["Height"]
+    map_class = None
 
     if (width == MapA4Portrait.WIDTH and height == MapA4Portrait.HEIGHT):
-        return MapA4Portrait(_MakePPMImage(width, height, obj.get_data()))
-    if (width == MapA4Landscape.WIDTH and height == MapA4Landscape.HEIGHT):
-        return MapA4Landscape(_MakePPMImage(width, height, obj.get_data()))
-    if (width == MapA3Portrait.WIDTH and height == MapA3Portrait.HEIGHT):
-        return MapA3Portrait(_MakePPMImage(width, height, obj.get_data()))
-    if (width == MapA3Landscape.WIDTH and height == MapA3Landscape.HEIGHT):
-        return MapA3Landscape(_MakePPMImage(width, height, obj.get_data()))
-    if (width == MapA2Portrait.WIDTH and height == MapA2Portrait.HEIGHT):
-        return MapA2Portrait(_MakePPMImage(width, height, obj.get_data()))
-    if (width == MapA2Landscape.WIDTH and height == MapA2Landscape.HEIGHT):
-        return MapA2Landscape(_MakePPMImage(width, height, obj.get_data()))
-    if (width == MapA1Portrait.WIDTH and height == MapA1Portrait.HEIGHT):
-        return MapA1Portrait(_MakePPMImage(width, height, obj.get_data()))
+        map_class = MapA4Portrait
+    elif (width == MapA4Landscape.WIDTH and height == MapA4Landscape.HEIGHT):
+        map_class = MapA4Landscape
+    elif (width == MapA3Portrait.WIDTH and height == MapA3Portrait.HEIGHT):
+        map_class = MapA3Portrait
+    elif (width == MapA3Landscape.WIDTH and height == MapA3Landscape.HEIGHT):
+        map_class = MapA3Landscape
+    elif (width == MapA2Portrait.WIDTH and height == MapA2Portrait.HEIGHT):
+        map_class = MapA2Portrait
+    elif (width == MapA2Landscape.WIDTH and height == MapA2Landscape.HEIGHT):
+        map_class = MapA2Landscape
+    elif (width == MapA1Portrait.WIDTH and height == MapA1Portrait.HEIGHT):
+        map_class = MapA1Portrait
     else:
-        return None
+        return none
+
+    return map_class(_MakePPMImage(width, height, obj.get_data()), map_path)

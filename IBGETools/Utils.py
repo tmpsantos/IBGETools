@@ -77,8 +77,8 @@ def TileScriptFileWriter(script, id, maps_list):
     tiles_zoom = "5-19"
 
     script.write(
-            "gdal2tiles.py %s -z %s -w openlayers -n %s.tif %s\n" %
-            (tiles_options, tiles_zoom, id, id))
+            "gdal2tiles.py %s -z %s -t %s %s.tif %s\n" %
+            (tiles_options, tiles_zoom, id, id, id))
 
     script_stat = os.fstat(script.fileno())
     os.fchmod(script.fileno(), script_stat.st_mode | stat.S_IEXEC)

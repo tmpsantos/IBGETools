@@ -1,8 +1,6 @@
 IBGETools
 =========
 
-## ibge_kml_maker.py
-
 ![alt tag](https://raw.github.com/tmpsantos/IBGETools/master/docs/screenshot.png)
 
 ### Ache o código da cidade no site do IBGE:
@@ -15,11 +13,15 @@ Pará de Minas por exemplo é 3147105.
 
 ftp://geoftp.ibge.gov.br/mapas_estatisticos/censo_2010/mapas_de_setores_censitarios/MG/3147105.zip
 
-Atenção! Use o arquivo do **censo_2010**.
+**Atenção!** Use o arquivo do censo_2010.
 
 ### Instale as dependências
 
 Testado no Ubuntu 13.10 em um Intel 64-bits:
+
+* python-gdal
+
+`$ sudo apt-get install python-gdal`
 
 * python-pdfminer
 
@@ -43,11 +45,19 @@ No meu caso, instalei o python-tesseract_0.8-1.8_amd64.deb. É provável que em 
 $ git clone https://github.com/tmpsantos/IBGETools.git
 $ cd IBGETools
 $ mkdir out; cd out
-$ ../ibge_kml_maker.py [path_para_os_diretorio_com_os_pdfs] > out.kml
 ```
-Exemplo:
+## Gerando um arquivo KML para o PicLayer ou Google Earth:
 ```
-$ ../ibge_kml_maker.py ../../osm/3147105/MSU/ > out.kml
+$ ../ibgetools --kml --id parademinas ../../osm/3147105/MSU/
 ```
-
-Usando o plugin PicLayer para o JSOM, abra o arquivo .kml.
+## Gerando tiles para abrir no browser ou layer TMS no JOSM (recomendado):
+```
+$ ../ibgetools --tiles --id parademinas ../../osm/3147105/MSU/
+$ ./parademinas_make_tiles.sh
+$ cd parademinas; python -m SimpleHTTPServer
+```
+Com o servidor HTTP rodando, abra o JOSM e adicione a seguinte layer TMS:
+```
+http://localhost:8000/{zoom}/{x}/{-y}.png
+```
+**Atenção!** O script make_tiles pode demorar uma eternidade.

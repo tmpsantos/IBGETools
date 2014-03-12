@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import argparse
 import fnmatch
 import os
 import sys
@@ -7,7 +8,7 @@ import sys
 from wand.api import library
 
 from IBGETools.Map import MapFactory
-from IBGETools.Utils import KMLFileWriter
+from IBGETools.Utils import KMLFileWriter, TileScriptFileWriter
 
 
 def ScanDirectoryForPDFs(directory):
@@ -43,13 +44,67 @@ def SaveMapImageAsPNG(ibge_map, basename):
     image.save(filename="%s.png" % basename)
 
 
-def Main():
-    if len(sys.argv) is not 2 or not os.path.isdir(sys.argv[1]):
-        print >> sys.stderr, "Usage: %s <path to map pack>" % sys.argv[0]
-        sys.exit(1)
+def SaveMapImageAsTIFF(ibge_map, basename):
+    image = ibge_map.GetMapImage()
 
-    map_paths = ScanDirectoryForPDFs(sys.argv[1])
+    # If we don't add the alpha channel, the tiles will get an empty
+    # black background.
+    image.alpha_channel = True
+
+    # Set compression to LZW, using the low level API here because
+    # this function is not supported by the high level bindings yet.
+    library.MagickSetCompression(image.wand, 11)
+
+    # TODO: Ideally we should save as a GeoTIFF with the coordinates
+    # tags. That would spare us one unnecessary step on the pipeline for
+    # generating tiles.
+    image.save(filename="%s.tif" % basename)
+
+
+def CheckForDirectory(path):
+    if not os.path.isdir(path):
+        raise argparse.ArgumentTypeError("%s is not a directory." % path)
+
+    return path
+
+
+def Main():
+    parser = argparse.ArgumentParser(
+        description="Generates KML or map tiles from IBGE PDFs.")
+
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    group.add_argument("--kml", action="store_true", help=
+            "Generates PNGs and a .kml file that can be imported to JOSM "
+            "(via PicLayer plugin) or opened by Google Earth.")
+    group.add_argument("--tiles", action="store_true", help=
+            "Generates TIFFs and a shell script that will generate map tiles "
+            "using GDAL tools (notable gdal2tiles.py) when executed.")
+    parser.add_argument("directory", nargs=1, type=CheckForDirectory, help=
+            "Directory to be recursively scanned for IBGE PDFs files.")
+    parser.add_argument("--id", required=True, help=
+            "An identifier to be used as prefix for the generated files.")
+
+    args = parser.parse_args()
+
+    directory = args.directory[0]
+
+    writer = None
+    save_image = None
+    output_filename = None
+
+    if args.kml:
+        writer = KMLFileWriter
+        save_image = SaveMapImageAsPNG
+        output_filename = "%s.kml" % args.id
+    else:
+        writer = TileScriptFileWriter
+        save_image = SaveMapImageAsTIFF
+        output_filename = "%s_make_tiles.sh" % args.id
+
+    map_paths = ScanDirectoryForPDFs(directory)
     map_list = []
+
     for map_path in map_paths:
         ibge_map = GetMapFromPath(map_path)
         if not ibge_map:
@@ -58,10 +113,12 @@ def Main():
         map_list.append(ibge_map)
         basename = os.path.splitext(os.path.basename(map_path))[0]
 
-        SaveMapImageAsPNG(ibge_map, basename)
+        save_image(ibge_map, "%s_%s" % (args.id, basename))
         ibge_map.Dispose()
 
-    KMLFileWriter(sys.stdout, map_list)
+    output = open(output_filename, "w")
+    writer(output, args.id, map_list)
+    output.close()
 
 
 if __name__ == "__main__":

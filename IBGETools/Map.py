@@ -1,4 +1,5 @@
 import StringIO
+
 from wand.image import Image
 from pdfminer.pdfparser import PDFDocument, PDFParser, PDFStream
 

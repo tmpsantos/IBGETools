@@ -308,6 +308,6 @@ def MapFactory(map_path):
     elif (width == MapA1Portrait.WIDTH and height == MapA1Portrait.HEIGHT):
         map_class = MapA1Portrait
     else:
-        return none
+        return None
 
     return map_class(_MakePPMImage(width, height, obj.get_data()), map_path)

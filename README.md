@@ -46,11 +46,11 @@ $ git clone https://github.com/tmpsantos/IBGETools.git
 $ cd IBGETools
 $ mkdir out; cd out
 ```
-## Gerando um arquivo KML para o PicLayer ou Google Earth:
+#### Gerando um arquivo KML para o PicLayer ou Google Earth:
 ```
 $ ../ibgetools --kml --id parademinas ../../osm/3147105/MSU/
 ```
-## Gerando tiles para abrir no browser ou layer TMS no JOSM (recomendado):
+#### Gerando tiles para abrir no browser ou layer TMS no JOSM (recomendado):
 ```
 $ ../ibgetools --tiles --id parademinas ../../osm/3147105/MSU/
 $ ./parademinas_make_tiles.sh

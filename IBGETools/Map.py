@@ -1,7 +1,8 @@
 import StringIO
 
-from wand.image import Image
 from pdfminer.pdfparser import PDFDocument, PDFParser, PDFStream
+from wand.api import library
+from wand.image import Image
 
 from OCR import OCR
 
@@ -159,6 +160,28 @@ class Map:
         self._height = self._ocr.GetDecimalDegrees(image) - self.GetY()
 
         return self._height
+
+    def SaveMapImageAsPNG(self, basename):
+        image = self.GetMapImage()
+
+        image.resize(image.width / 2, image.height / 2)
+        image.save(filename="%s.png" % basename)
+
+    def SaveMapImageAsTIFF(self, basename):
+        image = self.GetMapImage()
+
+        # If we don't add the alpha channel, the tiles will get an empty
+        # black background.
+        image.alpha_channel = True
+
+        # Set compression to LZW, using the low level API here because
+        # this function is not supported by the high level bindings yet.
+        library.MagickSetCompression(image.wand, 11)
+
+        # TODO: Ideally we should save as a GeoTIFF with the coordinates
+        # tags. That would spare us one unnecessary step on the pipeline for
+        # generating tiles.
+        image.save(filename="%s.tif" % basename)
 
     def _CropGeometry(self, geometry):
         x1 = geometry.x

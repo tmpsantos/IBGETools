@@ -248,6 +248,16 @@ class MapA1Portrait(Map):
     MARGIN_BOTTOM = 1320
 
 
+class MapA1Landscape(Map):
+    WIDTH = 9933
+    HEIGHT = 7016
+
+    MARGIN_LEFT = 375
+    MARGIN_RIGHT = 333
+    MARGIN_TOP = 335
+    MARGIN_BOTTOM = 1318
+
+
 def _MakePPMImage(width, height, data):
     buffer = StringIO.StringIO()
 
@@ -307,6 +317,8 @@ def MapFactory(map_path):
         map_class = MapA2Landscape
     elif (width == MapA1Portrait.WIDTH and height == MapA1Portrait.HEIGHT):
         map_class = MapA1Portrait
+    elif (width == MapA1Landscape.WIDTH and height == MapA1Landscape.HEIGHT):
+        map_class = MapA1Landscape
     else:
         return None
 

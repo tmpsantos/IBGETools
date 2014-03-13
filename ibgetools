@@ -74,6 +74,7 @@ def Main():
 
     group = parser.add_mutually_exclusive_group(required=True)
 
+    parser.add_argument("-v", action="store_true", help= "Verbose mode.")
     group.add_argument("--kml", action="store_true", help=
             "Generates PNGs and a .kml file that can be imported to JOSM "
             "(via PicLayer plugin) or opened by Google Earth.")
@@ -106,9 +107,15 @@ def Main():
     map_list = []
 
     for map_path in map_paths:
+        if args.v:
+            print "Processing:", map_path
+
         ibge_map = GetMapFromPath(map_path)
         if not ibge_map:
             continue
+
+        if args.v:
+            print "Processed:", map_path
 
         map_list.append(ibge_map)
         basename = os.path.splitext(os.path.basename(map_path))[0]

@@ -303,11 +303,13 @@ def MapFactory(map_path):
 
     document = PDFDocument()
 
-    parser = PDFParser(map_file)
-    parser.set_document(document)
-
-    document.set_parser(parser)
-    document.initialize("")
+    try:
+        parser = PDFParser(map_file)
+        parser.set_document(document)
+        document.set_parser(parser)
+        document.initialize("")
+    except:
+        return None
 
     # The image object on all IBGE PDFs is indexed
     # at ID 6. We also probe for a few properties.

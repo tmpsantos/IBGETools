@@ -5,6 +5,8 @@ import fnmatch
 import os
 import sys
 
+from concurrent.futures import ProcessPoolExecutor
+
 from IBGETools.Map import Map, MapFactory
 from IBGETools.Utils import KMLFileWriter, TileScriptFileWriter
 
@@ -42,6 +44,32 @@ def CheckForDirectory(path):
     return path
 
 
+def ProcessMap(executor_args):
+    map_path, id, save_as_png, verbose = executor_args
+
+    if verbose:
+        print "Processing:", map_path
+
+    ibge_map = GetMapFromPath(map_path)
+    if not ibge_map:
+        return None
+
+    basename = os.path.splitext(os.path.basename(map_path))[0]
+
+    if (save_as_png):
+        ibge_map.SaveMapImageAsPNG("%s_%s" % (id, basename))
+    else:
+        ibge_map.SaveMapImageAsTIFF("%s_%s" % (id, basename))
+
+    # This will free the resources and make the Map class "picklable".
+    ibge_map.Dispose()
+
+    if verbose:
+        print "Processed:", map_path
+
+    return ibge_map
+
+
 def Main():
     parser = argparse.ArgumentParser(
         description="Generates KML or map tiles from IBGE PDFs.")
@@ -49,6 +77,8 @@ def Main():
     group = parser.add_mutually_exclusive_group(required=True)
 
     parser.add_argument("-v", action="store_true", help= "Verbose mode.")
+    parser.add_argument("--jobs", type=int, default=1, help=
+            "Number of jobs for processing PDFs, be aware of memory usage.")
     group.add_argument("--kml", action="store_true", help=
             "Generates PNGs and a .kml file that can be imported to JOSM "
             "(via PicLayer plugin) or opened by Google Earth.")
@@ -69,35 +99,24 @@ def Main():
 
     if args.kml:
         writer = KMLFileWriter
-        save_image = Map.SaveMapImageAsPNG
         output_filename = "%s.kml" % args.id
     else:
         writer = TileScriptFileWriter
-        save_image = Map.SaveMapImageAsTIFF
         output_filename = "%s_make_tiles.sh" % args.id
 
     map_paths = ScanDirectoryForPDFs(directory)
-    map_list = []
 
-    for map_path in map_paths:
-        if args.v:
-            print "Processing:", map_path
+    executor = ProcessPoolExecutor(max_workers=args.jobs)
+    executor_args = [
+            (map_path, args.id, args.kml, args.v) for map_path in map_paths]
 
-        ibge_map = GetMapFromPath(map_path)
-        if not ibge_map:
-            continue
-
-        if args.v:
-            print "Processed:", map_path
-
-        map_list.append(ibge_map)
-        basename = os.path.splitext(os.path.basename(map_path))[0]
-
-        save_image(ibge_map, "%s_%s" % (args.id, basename))
-        ibge_map.Dispose()
+    maps_list = []
+    for ibge_map in executor.map(ProcessMap, executor_args):
+        if ibge_map:
+            maps_list.append(ibge_map)
 
     output = open(output_filename, "w")
-    writer(output, args.id, map_list)
+    writer(output, args.id, maps_list)
     output.close()
 
 

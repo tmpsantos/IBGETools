@@ -67,6 +67,7 @@ class Map:
     def Dispose(self):
         self._map_image.close()
         self._map_image = None
+        self._ocr = None
 
     def GetPath(self):
         return self._map_path

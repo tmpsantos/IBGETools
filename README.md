@@ -31,6 +31,10 @@ Testado no Ubuntu 13.10 em um Intel 64-bits:
 
 `$ sudo apt-get install python-wand`
 
+* python-concurrent.futures
+
+`$ sudo apt-get install python-concurrent.futures`
+
 * python-tesseract
 
 Esta dependência não vem por default no Ubuntu 13.10. O pacote está disponível no link abaixo.

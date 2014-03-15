@@ -14,14 +14,6 @@ _BBOX_WIDTH_ = 200
 _BBOX_HEIGHT_ = 40
 
 
-class _Geometry:
-    def __init__(self, x, y, width, height):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-
-
 class Map:
     def __init__(self, map_image, map_path):
         self._map_image = map_image
@@ -52,10 +44,10 @@ class Map:
         if self._height > -0.001 or self._height < -0.05:
             return False
 
-        map_geometry = self._GetMapGeometry()
+        _, _, width, height = self._GetMapGeometry()
 
-        height_pixel_ratio = self.GetHeight() / map_geometry.height
-        width_pixel_ratio = self.GetWidth() / map_geometry.width
+        height_pixel_ratio = self.GetHeight() / height
+        width_pixel_ratio = self.GetWidth() / width
 
         # The ratio should not be very different from each other, otherwise
         # we OCR'ed one of the coordinates wrong.
@@ -80,22 +72,19 @@ class Map:
         # map image, but the whole contents of the PDF including
         # the coordinates, logos, etc. So when the map is requested,
         # we need to slice it from this image.
-        return self._CropGeometry(self._GetMapGeometry())
+        return self._CropGeometry(*self._GetMapGeometry())
 
     def GetX(self):
         if self._x:
             return self._x
 
-        map_geometry = self._GetMapGeometry()
+        x, y, _, _ = self._GetMapGeometry()
 
         offset = _BBOX_OFFSET_
         width = _BBOX_WIDTH_
         height = _BBOX_HEIGHT_
 
-        coordinate_geometry = _Geometry(map_geometry.x,
-                map_geometry.y - offset - height, width, height)
-
-        image = self._CropGeometry(coordinate_geometry)
+        image = self._CropGeometry(x, y - offset - height, width, height)
         self._x = self._ocr.GetDecimalDegrees(image)
 
         return self._x
@@ -104,16 +93,13 @@ class Map:
         if self._y:
             return self._y
 
-        map_geometry = self._GetMapGeometry()
+        x, y, _, _ = self._GetMapGeometry()
 
         offset = _BBOX_OFFSET_
         width = _BBOX_HEIGHT_
         height = _BBOX_WIDTH_
 
-        coordinate_geometry = _Geometry(map_geometry.x - offset - width,
-                map_geometry.y, width, height)
-
-        image = self._CropGeometry(coordinate_geometry)
+        image = self._CropGeometry(x - offset - width, y, width, height)
         image.rotate(90)
         self._y = self._ocr.GetDecimalDegrees(image)
 
@@ -123,19 +109,17 @@ class Map:
         if self._width:
             return self._width
 
-        map_geometry = self._GetMapGeometry()
+        x, y, map_width, map_height = self._GetMapGeometry()
 
         offset = _BBOX_OFFSET_
         width = _BBOX_WIDTH_
         height = _BBOX_HEIGHT_
 
-        x_offset = map_geometry.x + map_geometry.width
-        y_offset = map_geometry.y + map_geometry.height
+        x_offset = x + map_width
+        y_offset = y + map_height
 
-        coordinate_geometry = _Geometry(x_offset - width, y_offset + offset,
-                width, height)
-
-        image = self._CropGeometry(coordinate_geometry)
+        image = self._CropGeometry(
+                x_offset - width, y_offset + offset, width, height)
         self._width = self._ocr.GetDecimalDegrees(image) - self.GetX()
 
         return self._width
@@ -144,19 +128,17 @@ class Map:
         if self._height:
             return self._height
 
-        map_geometry = self._GetMapGeometry()
+        x, y, map_width, map_height = self._GetMapGeometry()
 
         offset = _BBOX_OFFSET_
         width = _BBOX_HEIGHT_
         height = _BBOX_WIDTH_
 
-        x_offset = map_geometry.x + map_geometry.width
-        y_offset = map_geometry.y + map_geometry.height
+        x_offset = x + map_width
+        y_offset = y + map_height
 
-        coordinate_geometry = _Geometry(x_offset + offset, y_offset - height,
-                width, height)
-
-        image = self._CropGeometry(coordinate_geometry)
+        image = self._CropGeometry(
+                x_offset + offset, y_offset - height, width, height)
         image.rotate(90)
         self._height = self._ocr.GetDecimalDegrees(image) - self.GetY()
 
@@ -184,11 +166,9 @@ class Map:
         # generating tiles.
         image.save(filename="%s.tif" % basename)
 
-    def _CropGeometry(self, geometry):
-        x1 = geometry.x
-        y1 = geometry.y
-        x2 = geometry.x + geometry.width
-        y2 = geometry.y + geometry.height
+    def _CropGeometry(self, x1, y1, width, height):
+        x2 = x1 + width
+        y2 = y1 + height
 
         return self._map_image[x1:x2, y1:y2]
 
@@ -196,7 +176,7 @@ class Map:
         width = self.WIDTH - self.MARGIN_LEFT - self.MARGIN_RIGHT
         height = self.HEIGHT - self.MARGIN_TOP - self.MARGIN_BOTTOM
 
-        return _Geometry(self.MARGIN_LEFT, self.MARGIN_TOP, width, height)
+        return self.MARGIN_LEFT, self.MARGIN_TOP, width, height
 
 
 # The WIDTH and HEIGHT corresponds to the size of the PDF page. Every document

@@ -8,8 +8,8 @@ def KMLFileWriter(kml, id, maps_list):
 
     for ibge_map in maps_list:
         north = "{0:.10f}".format(ibge_map.GetY())
-        south = "{0:.10f}".format(ibge_map.GetHeight() + ibge_map.GetY())
-        east = "{0:.10f}".format(ibge_map.GetWidth() + ibge_map.GetX())
+        south = "{0:.10f}".format(ibge_map.GetY() - ibge_map.GetHeight())
+        east = "{0:.10f}".format(ibge_map.GetX() + ibge_map.GetWidth())
         west = "{0:.10f}".format(ibge_map.GetX())
 
         basename = os.path.splitext(os.path.basename(ibge_map.GetPath()))[0]
@@ -45,8 +45,8 @@ def TileScriptFileWriter(script, id, maps_list):
 
     for ibge_map in maps_list:
         north = "{0:.10f}".format(ibge_map.GetY())
-        south = "{0:.10f}".format(ibge_map.GetHeight() + ibge_map.GetY())
-        east = "{0:.10f}".format(ibge_map.GetWidth() + ibge_map.GetX())
+        south = "{0:.10f}".format(ibge_map.GetY() - ibge_map.GetHeight())
+        east = "{0:.10f}".format(ibge_map.GetX() + ibge_map.GetWidth())
         west = "{0:.10f}".format(ibge_map.GetX())
 
         coordinates = "%s %s %s %s" % (west, north, east, south)

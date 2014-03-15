@@ -7,6 +7,7 @@ import sys
 
 from concurrent.futures import ProcessPoolExecutor
 
+from IBGETools.Geometry import Region
 from IBGETools.Map import Map, MapFactory
 from IBGETools.Utils import KMLFileWriter, TileScriptFileWriter
 
@@ -110,13 +111,13 @@ def Main():
     executor_args = [
             (map_path, args.id, args.kml, args.v) for map_path in map_paths]
 
-    maps_list = []
+    region = Region()
     for ibge_map in executor.map(ProcessMap, executor_args):
         if ibge_map:
-            maps_list.append(ibge_map)
+            region.AddRectangle(ibge_map)
 
     output = open(output_filename, "w")
-    writer(output, args.id, maps_list)
+    writer(output, args.id, region.GetRectangles())
     output.close()
 
 

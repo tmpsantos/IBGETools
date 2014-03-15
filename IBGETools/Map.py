@@ -5,6 +5,7 @@ from wand.api import library
 from wand.image import Image
 
 from OCR import OCR
+from Geometry import Rectangle
 
 # This is a naive attempt to find a generic offset and bounding box
 # that should work on every map format. The OFFSET here is the distance
@@ -14,8 +15,10 @@ _BBOX_WIDTH_ = 200
 _BBOX_HEIGHT_ = 40
 
 
-class Map:
+class Map(Rectangle):
     def __init__(self, map_image, map_path):
+        super(Map, self).__init__()
+
         self._map_image = map_image
         self._map_path = map_path
         self._ocr = OCR()
@@ -41,7 +44,7 @@ class Map:
         if self._width < 0.001 or self._width > 0.05:
             return False
 
-        if self._height > -0.001 or self._height < -0.05:
+        if self._height < 0.001 or self._height > 0.05:
             return False
 
         _, _, width, height = self._GetMapGeometry()
@@ -140,7 +143,7 @@ class Map:
         image = self._CropGeometry(
                 x_offset + offset, y_offset - height, width, height)
         image.rotate(90)
-        self._height = self._ocr.GetDecimalDegrees(image) - self.GetY()
+        self._height = abs(self._ocr.GetDecimalDegrees(image) - self.GetY())
 
         return self._height
 

@@ -7,7 +7,7 @@ import sys
 
 from concurrent.futures import ProcessPoolExecutor
 
-from IBGETools.Geometry import Region
+from IBGETools.Geometry import RegionFactory
 from IBGETools.Map import Map, MapFactory
 from IBGETools.Utils import KMLFileWriter, TileScriptFileWriter
 
@@ -111,15 +111,23 @@ def Main():
     executor_args = [
             (map_path, args.id, args.kml, args.v) for map_path in map_paths]
 
-    region = Region()
+    maps_list = []
     for ibge_map in executor.map(ProcessMap, executor_args):
         if ibge_map:
-            region.AddRectangle(ibge_map)
+            maps_list.append(ibge_map)
 
-    region.FilterHiddenRectangles()
+    regions_list = RegionFactory(maps_list)
+    filtered_map_list = []
+    for region in regions_list:
+        region.FilterHiddenRectangles()
+        filtered_map_list += region.GetRectangles()
+
+    if args.v:
+        print "Filtered %d images from %d in %d region(s)." % (len(maps_list) -
+                len(filtered_map_list), len(maps_list), len(regions_list))
 
     output = open(output_filename, "w")
-    writer(output, args.id, region.GetRectangles())
+    writer(output, args.id, filtered_map_list)
     output.close()
 
 

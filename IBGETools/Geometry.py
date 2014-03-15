@@ -51,6 +51,12 @@ class Rectangle(object):
         return (self.GetLeft() <= x <= self.GetRight() and
                 self.GetBottom() <= y <= self.GetTop())
 
+    def Overlaps(self, other):
+        return (self.Contains(other.GetLeft(), other.GetTop()) or
+                self.Contains(other.GetLeft(), other.GetBottom()) or
+                self.Contains(other.GetRight(), other.GetTop()) or
+                self.Contains(other.GetRight(), other.GetBottom()))
+
     def __gt__(self, other):
         return (abs(self.GetWidth() * self.GetHeight()) >
                 abs(other.GetWidth() * other.GetHeight()))
@@ -95,6 +101,14 @@ class Region(Rectangle):
 
         self._rectangles = filter(lambda x: x.IsVisible(), rectangles)
 
+    def Merge(self, other):
+        self._left = min(self._left, other.GetLeft())
+        self._top = max(self._top, other.GetTop())
+        self._right = max(self._right, other.GetRight())
+        self._bottom = min(self._bottom, other.GetBottom())
+
+        self._rectangles += other.GetRectangles()
+
     def GetRectangles(self):
         return self._rectangles
 
@@ -109,3 +123,33 @@ class Region(Rectangle):
 
     def GetHeight(self):
         return self._top - self._bottom
+
+
+def RegionFactory(rects_list):
+    regions_list = []
+
+    for rect in rects_list:
+        overlaping_regions = []
+        non_overlaping_regions = []
+
+        for region in regions_list:
+            if (region.Overlaps(rect)):
+                overlaping_regions.append(region)
+            else:
+                non_overlaping_regions.append(region)
+
+        if len(overlaping_regions) is 0:
+            region = Region()
+            region.AddRectangle(rect)
+            regions_list.append(region)
+            continue
+
+        merged_region = Region()
+        merged_region.AddRectangle(rect)
+
+        for region in overlaping_regions:
+            merged_region.Merge(region)
+
+        regions_list = non_overlaping_regions + [merged_region]
+
+    return regions_list

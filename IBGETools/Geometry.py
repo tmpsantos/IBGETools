@@ -1,4 +1,22 @@
+# Degrees per pixel at zoom 19:
+# http://wiki.openstreetmap.org/wiki/Zoom_levels
+_DEGREES_PER_PIXEL_ = 0.0005 / 256
+
+# If we do a hit test on every pixel, it would take forever. Instead
+# we do sampling. Larger the sample, faster, but we might miss some tiles.
+_SAMPLE_ = _DEGREES_PER_PIXEL_ * 500
+
+
+def coordinates_range(start, stop):
+    while start < stop:
+        yield start
+        start += _SAMPLE_
+
+
 class Rectangle(object):
+    def __init__(self):
+        self._is_visible = False
+
     def GetX(self):
         raise NotImplementedError()
 
@@ -22,6 +40,16 @@ class Rectangle(object):
 
     def GetBottom(self):
         return self.GetTop() - self.GetHeight()
+
+    def IsVisible(self):
+        return self._is_visible
+
+    def SetVisible(self, visible):
+        self._is_visible = visible
+
+    def Contains(self, x, y):
+        return (self.GetLeft() <= x <= self.GetRight() and
+                self.GetBottom() <= y <= self.GetTop())
 
     def __gt__(self, other):
         return (abs(self.GetWidth() * self.GetHeight()) >
@@ -53,6 +81,19 @@ class Region(Rectangle):
         self._top = max(self._top, rectangle.GetTop())
         self._right = max(self._right, rectangle.GetRight())
         self._bottom = min(self._bottom, rectangle.GetBottom())
+
+    def FilterHiddenRectangles(self):
+        rectangles = sorted(self._rectangles, reverse=True)
+
+        # Poor man's occlusion culling.
+        for x in coordinates_range(self.GetLeft(), self.GetRight()):
+            for y in coordinates_range(self.GetBottom(), self.GetTop()):
+                for rectangle in rectangles:
+                    if rectangle.Contains(x, y):
+                        rectangle.SetVisible(True)
+                        break
+
+        self._rectangles = filter(lambda x: x.IsVisible(), rectangles)
 
     def GetRectangles(self):
         return self._rectangles

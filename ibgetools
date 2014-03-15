@@ -116,6 +116,8 @@ def Main():
         if ibge_map:
             region.AddRectangle(ibge_map)
 
+    region.FilterHiddenRectangles()
+
     output = open(output_filename, "w")
     writer(output, args.id, region.GetRectangles())
     output.close()

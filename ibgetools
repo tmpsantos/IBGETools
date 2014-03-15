@@ -85,7 +85,7 @@ def Main():
             "(via PicLayer plugin) or opened by Google Earth.")
     group.add_argument("--tiles", action="store_true", help=
             "Generates TIFFs and a shell script that will generate map tiles "
-            "using GDAL tools (notable gdal2tiles.py) when executed.")
+            "using GDAL tools and TileMill when executed.")
     parser.add_argument("directory", nargs=1, type=CheckForDirectory, help=
             "Directory to be recursively scanned for IBGE PDFs files.")
     parser.add_argument("--id", required=True, help=
@@ -116,18 +116,13 @@ def Main():
         if ibge_map:
             maps_list.append(ibge_map)
 
-    regions_list = RegionFactory(maps_list)
-    filtered_map_list = []
-    for region in regions_list:
-        region.FilterHiddenRectangles()
-        filtered_map_list += region.GetRectangles()
-
+    region = RegionFactory(maps_list)
     if args.v:
-        print "Filtered %d images from %d in %d region(s)." % (len(maps_list) -
-                len(filtered_map_list), len(maps_list), len(regions_list))
+        print "Filtered %d images from %d." % (
+                len(maps_list) - len(region.GetRectangles()), len(maps_list))
 
     output = open(output_filename, "w")
-    writer(output, args.id, filtered_map_list)
+    writer(output, args.id, region)
     output.close()
 
 

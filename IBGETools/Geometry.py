@@ -109,6 +109,8 @@ class Region(Rectangle):
 
         self._rectangles += other.GetRectangles()
 
+        return self
+
     def GetRectangles(self):
         return self._rectangles
 
@@ -152,4 +154,9 @@ def RegionFactory(rects_list):
 
         regions_list = non_overlaping_regions + [merged_region]
 
-    return regions_list
+    # Filter all the maps that are not visible (most of them) to
+    # reduce tile generation time or memory footprint when loading
+    # the .kml.
+    map(lambda r: r.FilterHiddenRectangles(), regions_list)
+
+    return reduce(lambda r1, r2: r1.Merge(r2), regions_list)

@@ -1,12 +1,12 @@
 import os
 import stat
 
-def KMLFileWriter(kml, id, maps_list):
+def KMLFileWriter(kml, id, region):
     kml.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     kml.write('<kml xmlns="http://www.opengis.net/kml/2.2">\n')
     kml.write("  <Folder>\n")
 
-    for ibge_map in maps_list:
+    for ibge_map in region.GetRectangles():
         north = "{0:.10f}".format(ibge_map.GetY())
         south = "{0:.10f}".format(ibge_map.GetY() - ibge_map.GetHeight())
         east = "{0:.10f}".format(ibge_map.GetX() + ibge_map.GetWidth())
@@ -31,7 +31,7 @@ def KMLFileWriter(kml, id, maps_list):
 
 
 
-def TileScriptFileWriter(script, id, maps_list):
+def TileScriptFileWriter(script, id, region):
     # Shell script standard header
     script.write("#!/bin/sh\n\n")
 
@@ -43,7 +43,7 @@ def TileScriptFileWriter(script, id, maps_list):
 
     current_path = os.getcwd()
 
-    for ibge_map in maps_list:
+    for ibge_map in region.GetRectangles():
         north = "{0:.10f}".format(ibge_map.GetY())
         south = "{0:.10f}".format(ibge_map.GetY() - ibge_map.GetHeight())
         east = "{0:.10f}".format(ibge_map.GetX() + ibge_map.GetWidth())
@@ -65,11 +65,22 @@ def TileScriptFileWriter(script, id, maps_list):
             "gdalbuildvrt %s -o %s.vrt %s_*.vrt\n" %
             (merge_options, id, os.path.join(current_path, id)))
 
-    tiles_options = "-w openlayers -n"
-    tiles_zoom = "5-19"
+    # TODO: Create the project file
+
+    north = "{0:.10f}".format(region.GetTop())
+    south = "{0:.10f}".format(region.GetBottom())
+    east = "{0:.10f}".format(region.GetRight())
+    west = "{0:.10f}".format(region.GetLeft())
+
+    bbox = "%s,%s,%s,%s" % (west, south, east, north)
+
+    tiles_options = str(
+            "export %s %s.mbtiles --format=mbtiles --metatile=16" % (id, id))
+    tiles_zoom = "--minzoom=8 --maxzoom=19"
+
     script.write(
-            "gdal2tiles.py %s -z %s -t %s %s.vrt %s\n" %
-            (tiles_options, tiles_zoom, id, id, id))
+            "node /usr/share/tilemill/index.js %s %s --bbox=%s\n" %
+            (tiles_options, tiles_zoom, bbox))
 
     script_stat = os.fstat(script.fileno())
     os.fchmod(script.fileno(), script_stat.st_mode | stat.S_IEXEC)

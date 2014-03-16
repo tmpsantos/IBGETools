@@ -1,6 +1,8 @@
 IBGETools
 =========
 
+[Looking for instructions in english? Click here.](docs/README_en.md)
+
 ![alt tag](https://raw.github.com/tmpsantos/IBGETools/master/docs/screenshot.png)
 
 ### Ache o código da cidade no site do IBGE:

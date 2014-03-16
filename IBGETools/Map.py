@@ -14,6 +14,10 @@ _BBOX_OFFSET_ = 40
 _BBOX_WIDTH_ = 200
 _BBOX_HEIGHT_ = 40
 
+# The image object on all IBGE PDFs is indexed
+# at ID 6. We also probe for a few properties.
+_PDF_OBJ_INDEX_ = 6
+
 
 def _GetMargins(image):
     width, height = image.size
@@ -368,6 +372,23 @@ def _MakePPMImage(width, height, data):
     return image
 
 
+def _ProcessWeirdPDF(document):
+    # Process some weird PDFs in the SP dataset (so far)
+    # which each have one object for each image scanline.
+    index = _PDF_OBJ_INDEX_
+    buffer = StringIO.StringIO()
+
+    while True:
+        obj = document.getobj(index)
+        if not obj or not isinstance(obj, PDFStream):
+            break
+
+        buffer.write(obj.get_data())
+        index += 1
+
+    return buffer.getvalue(), index - _PDF_OBJ_INDEX_
+
+
 def MapFactory(map_path):
     try:
         map_file = file(map_path, "rb")
@@ -384,9 +405,7 @@ def MapFactory(map_path):
     except:
         return None
 
-    # The image object on all IBGE PDFs is indexed
-    # at ID 6. We also probe for a few properties.
-    obj = document.getobj(6)
+    obj = document.getobj(_PDF_OBJ_INDEX_)
     if not obj or not isinstance(obj, PDFStream):
         return None
 
@@ -400,6 +419,14 @@ def MapFactory(map_path):
     width = obj["Width"]
     height = obj["Height"]
     map_class = None
+
+    weird_pdf = height == 1
+
+    data = None
+    if weird_pdf:
+        data, height = _ProcessWeirdPDF(document)
+    else:
+        data = obj.get_data()
 
     if (width == MapA4Portrait.WIDTH and height == MapA4Portrait.HEIGHT):
         map_class = MapA4Portrait
@@ -420,4 +447,4 @@ def MapFactory(map_path):
     else:
         return None
 
-    return map_class(_MakePPMImage(width, height, obj.get_data()), map_path)
+    return map_class(_MakePPMImage(width, height, data), map_path)

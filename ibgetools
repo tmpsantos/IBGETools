@@ -86,6 +86,10 @@ def Main():
     group.add_argument("--tiles", action="store_true", help=
             "Generates TIFFs and a shell script that will generate map tiles "
             "using GDAL tools and TileMill when executed.")
+    parser.add_argument("--upload", action="store_true", help=
+            "The generated shell script will also upload the tiles to the "
+            "cloud. Make sure to have ~/.tilemill/config.json properly set "
+            "with auth keys.")
     parser.add_argument("directory", nargs=1, type=CheckForDirectory, help=
             "Directory to be recursively scanned for IBGE PDFs files.")
     parser.add_argument("--id", required=True, help=
@@ -122,7 +126,7 @@ def Main():
                 len(maps_list) - len(region.GetRectangles()), len(maps_list))
 
     output = open(output_filename, "w")
-    writer(output, args.id, region)
+    writer(output, args.id, region, args.upload)
     output.close()
 
 

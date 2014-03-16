@@ -65,3 +65,10 @@ EOF
 node /usr/share/tilemill/index.js export {{ data.id }} {{ data.id }}.mbtiles --format=mbtiles \
     --metatile=16 --minzoom=8 --maxzoom=19 --files=. \
     --bbox={{ data.west }},{{ data.south }},{{ data.east }},{{ data.north }}
+
+
+{% if data.config %}
+# Upload the map to the cloud:
+node /usr/share/tilemill/index.js export {{ data.id }} {{ data.id }}.mbtiles --format=upload \
+    --config={{ data.config }}
+{% endif %}

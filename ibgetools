@@ -107,7 +107,7 @@ def Main():
         output_filename = "%s.kml" % args.id
     else:
         writer = TileScriptFileWriter
-        output_filename = "%s_make_tiles.sh" % args.id
+        output_filename = "%s.sh" % args.id
 
     map_paths = ScanDirectoryForPDFs(directory)
 

@@ -19,10 +19,6 @@ ftp://geoftp.ibge.gov.br/mapas_estatisticos/censo_2010/mapas_de_setores_censitar
 
 Testado no Ubuntu 13.10 em um Intel 64-bits:
 
-* python-gdal
-
-`$ sudo apt-get install python-gdal`
-
 * python-pdfminer
 
 `$ sudo apt-get install python-pdfminer`
@@ -43,6 +39,16 @@ https://code.google.com/p/python-tesseract/downloads/list
 
 No meu caso, instalei o python-tesseract_0.8-1.8_amd64.deb. É provável que em versões mais antigas do Ubuntu seja necessário instalar manualmente a libtesseract além dos bindings para python.
 
+* python-gdal (apenas para --tiles)
+
+`$ sudo apt-get install python-gdal`
+
+* TileMill (apenas para --tiles)
+
+Siga as intruções no link abaixo:
+
+https://www.mapbox.com/tilemill/docs/linux-install/#terminal_installation
+
 ### Como usar a ferramenta:
 
 ```
@@ -54,14 +60,12 @@ $ mkdir out; cd out
 ```
 $ ../ibgetools --kml --id parademinas ../../osm/3147105/MSU/
 ```
-#### Gerando tiles para abrir no browser ou layer TMS no JOSM (recomendado):
+
+#### Gerando tiles para abrir no browser ou layer TMS no JOSM:
 ```
 $ ../ibgetools --tiles --id parademinas ../../osm/3147105/MSU/
-$ ./parademinas_make_tiles.sh
-$ cd parademinas; python -m SimpleHTTPServer
+$ ./parademinas.sh
 ```
-Com o servidor HTTP rodando, abra o JOSM e adicione a seguinte layer TMS:
-```
-http://localhost:8000/{zoom}/{x}/{-y}.png
-```
-**Atenção!** O script make_tiles pode demorar uma eternidade.
+Faça upload do arquivo .mbtiles para sua conta no Mapbox (até 50 MB é gratuito) ou crie você mesmo um servidor TileStream.
+
+**Atenção!** O script para gerar tiles pode demorar, mas não se assuste com a estimativa de tempo inicial, porque ela está errada. Não é tão lento quanto parece.

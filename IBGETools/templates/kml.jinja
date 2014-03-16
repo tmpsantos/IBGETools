@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+    <Folder>
+        {%- for item in item_list %}
+        <GroundOverlay>
+            <Icon>
+                <href>{{ item.href }}</href>
+            </Icon>
+            <LatLonBox>
+                <north>{{ item.north }}</north>
+                <south>{{ item.south }}</south>
+                <east>{{ item.east }}</east>
+                <west>{{ item.west }}</west>
+            </LatLonBox>
+        </GroundOverlay>
+        {%- endfor %}
+  </Folder>
+</kml>

@@ -7,7 +7,7 @@ _DEGREES_PER_PIXEL_ = 0.0005 / 256
 _SAMPLE_ = _DEGREES_PER_PIXEL_ * 500
 
 
-def coordinates_range(start, stop):
+def _CoordinatesRange(start, stop):
     while start < stop:
         yield start
         start += _SAMPLE_
@@ -92,8 +92,8 @@ class Region(Rectangle):
         rectangles = sorted(self._rectangles, reverse=True)
 
         # Poor man's occlusion culling.
-        for x in coordinates_range(self.GetLeft(), self.GetRight()):
-            for y in coordinates_range(self.GetBottom(), self.GetTop()):
+        for x in _CoordinatesRange(self.GetLeft(), self.GetRight()):
+            for y in _CoordinatesRange(self.GetBottom(), self.GetTop()):
                 for rectangle in rectangles:
                     if rectangle.Contains(x, y):
                         rectangle.SetVisible(True)

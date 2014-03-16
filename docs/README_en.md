@@ -19,6 +19,10 @@ ftp://geoftp.ibge.gov.br/mapas_estatisticos/censo_2010/mapas_de_setores_censitar
 
 Tested on Ubuntu 13.10 Intel 64-bits:
 
+* python-jinja2
+
+`$ sudo apt-get install python-jinja2`
+
 * python-pdfminer
 
 `$ sudo apt-get install python-pdfminer`

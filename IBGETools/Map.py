@@ -2,7 +2,7 @@ import StringIO
 
 from pdfminer.pdfparser import PDFDocument, PDFParser, PDFStream
 from wand.api import library
-from wand.image import Image
+from wand.image import Image, Color
 
 from OCR import OCR
 from Geometry import Rectangle
@@ -20,12 +20,17 @@ _PDF_OBJ_INDEX_ = 6
 
 
 class Map(Rectangle):
-    def __init__(self, map_image, map_path):
+    def __init__(self, map_image, margins, map_path):
         super(Map, self).__init__()
 
         self._map_image = map_image
         self._map_path = map_path
         self._ocr = OCR()
+
+        self._margin_left = margins[0]
+        self._margin_top = margins[1]
+        self._margin_right = margins[2]
+        self._margin_bottom = margins[3]
 
         self._x = 0.
         self._y = 0.
@@ -180,10 +185,10 @@ class Map(Rectangle):
         return self._map_image[x1:x2, y1:y2]
 
     def _GetMapGeometry(self):
-        width = self.WIDTH - self.MARGIN_LEFT - self.MARGIN_RIGHT
-        height = self.HEIGHT - self.MARGIN_TOP - self.MARGIN_BOTTOM
+        width = self.WIDTH - self._margin_left - self._margin_right
+        height = self.HEIGHT - self._margin_top - self._margin_bottom
 
-        return self.MARGIN_LEFT, self.MARGIN_TOP, width, height
+        return self._margin_left, self._margin_top, width, height
 
 
 # The WIDTH and HEIGHT corresponds to the size of the PDF page. Every document
@@ -193,80 +198,40 @@ class MapA4Portrait(Map):
     WIDTH = 2480
     HEIGHT = 3508
 
-    MARGIN_LEFT = 152
-    MARGIN_RIGHT = 112
-    MARGIN_TOP = 137
-    MARGIN_BOTTOM = 452
-
 
 class MapA4Landscape(Map):
     WIDTH = 3508
     HEIGHT = 2480
-
-    MARGIN_LEFT = 153
-    MARGIN_RIGHT = 135
-    MARGIN_TOP = 157
-    MARGIN_BOTTOM = 451
 
 
 class MapA3Portrait(Map):
     WIDTH = 3508
     HEIGHT = 4961
 
-    MARGIN_LEFT = 248
-    MARGIN_RIGHT = 166
-    MARGIN_TOP = 184
-    MARGIN_BOTTOM = 704
-
 
 class MapA3Landscape(Map):
     WIDTH = 4961
     HEIGHT = 3508
-
-    MARGIN_LEFT = 249
-    MARGIN_RIGHT = 254
-    MARGIN_TOP = 213
-    MARGIN_BOTTOM = 703
 
 
 class MapA2Portrait(Map):
     WIDTH = 4961
     HEIGHT = 7016
 
-    MARGIN_LEFT = 230
-    MARGIN_RIGHT = 174
-    MARGIN_TOP = 283
-    MARGIN_BOTTOM = 899
-
 
 class MapA2Landscape(Map):
     WIDTH = 7016
     HEIGHT = 4961
-
-    MARGIN_LEFT = 230
-    MARGIN_RIGHT = 242
-    MARGIN_TOP = 259
-    MARGIN_BOTTOM = 898
 
 
 class MapA1Portrait(Map):
     WIDTH = 7016
     HEIGHT = 9933
 
-    MARGIN_LEFT = 373
-    MARGIN_RIGHT = 287
-    MARGIN_TOP = 416
-    MARGIN_BOTTOM = 1320
-
 
 class MapA1Landscape(Map):
     WIDTH = 9933
     HEIGHT = 7016
-
-    MARGIN_LEFT = 375
-    MARGIN_RIGHT = 333
-    MARGIN_TOP = 335
-    MARGIN_BOTTOM = 1318
 
 
 def _MakePPMImage(width, height, data):
@@ -298,6 +263,39 @@ def _ProcessWeirdPDF(document):
         index += 1
 
     return buffer.getvalue(), index - _PDF_OBJ_INDEX_
+
+
+def _GetMargins(width, height, image):
+    vslice = image[width / 2:width / 2 + 1, 0:height]
+    hslice = image[height / 2]
+
+    black = Color('#000')
+
+    left = 1
+    for y in hslice:
+        if y == black:
+            break
+        left += 1
+
+    right = 1
+    for y in reversed(hslice):
+        if y == black:
+            break
+        right += 1
+
+    top = 1
+    for row in vslice:
+        if row[0] == black:
+            break
+        top += 1
+
+    bottom = 1
+    for row in reversed(vslice):
+        if row[0] == black:
+            break
+        bottom += 1
+
+    return left, top, right, bottom
 
 
 def MapFactory(map_path):
@@ -358,4 +356,10 @@ def MapFactory(map_path):
     else:
         return None
 
-    return map_class(_MakePPMImage(width, height, data), map_path)
+    try:
+        image = _MakePPMImage(width, height, data)
+        margins = _GetMargins(width, height, image)
+
+        return map_class(image, margins, map_path)
+    except:
+        return None

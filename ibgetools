@@ -24,15 +24,15 @@ def ScanDirectoryForPDFs(directory):
     return pdf_paths
 
 
-def GetMapFromPath(map_path):
+def GetMapFromPath(id, map_path):
     ibge_map = MapFactory(map_path)
 
     if not ibge_map:
-        print >> sys.stderr, "Not supported: " + map_path
+        print >> sys.stderr, "%s [Error] PDF not supported: %s" % (id, map_path)
         return ibge_map
 
     if not ibge_map.IsValid():
-        print >> sys.stderr, "Error parsing: " + map_path
+        print >> sys.stderr, "%s [Error] Could not parse: %s" % (id, map_path)
         return None
 
     return ibge_map
@@ -49,9 +49,9 @@ def ProcessMap(executor_args):
     map_path, id, save_as_png, verbose = executor_args
 
     if verbose:
-        print "Processing:", map_path
+        print "%s [Debug] Processing: %s" % (id, map_path)
 
-    ibge_map = GetMapFromPath(map_path)
+    ibge_map = GetMapFromPath(id, map_path)
     if not ibge_map:
         return None
 
@@ -66,14 +66,14 @@ def ProcessMap(executor_args):
     ibge_map.Dispose()
 
     if verbose:
-        print "Processed:", map_path
+        print "%s [Debug] Processed: %s" % (id, map_path)
 
     return ibge_map
 
 
 def ProcessKML(args, regions_list):
     if not regions_list:
-        print >> sys.stderr, "Error: city %s is invalid." % args.id
+        print >> sys.stderr, "%s [Error] Fatal error when parsing." % args.id
         return
 
     region = reduce(lambda r1, r2: r1.Merge(r2), regions_list)
@@ -85,7 +85,7 @@ def ProcessKML(args, regions_list):
 
 def ProcessMBTiles(args, regions_list):
     if not regions_list:
-        print >> sys.stderr, "Error: city %s is invalid." % args.id
+        print >> sys.stderr, "%s [Error] Fatal error when parsing." % args.id
         return
 
     if not args.regions:

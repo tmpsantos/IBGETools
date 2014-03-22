@@ -6,7 +6,7 @@
 {%- for item in item_list %}
 gdal_translate -of vrt -a_srs '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs' \
     -a_ullr {{ item.west }} {{ item.north }} {{ item.east }} {{ item.south }} \
-    "{{ item.name }}.tif" "{{ item.name }}.vrt"
+    "{{ item.name }}.tif" "{{ item.vrt_name }}.vrt"
 {%- endfor %}
 
 

@@ -71,6 +71,34 @@ def ProcessMap(executor_args):
     return ibge_map
 
 
+def ProcessKML(args, regions_list):
+    if not regions_list:
+        print >> sys.stderr, "Error: city %s is invalid." % args.id
+        return
+
+    region = reduce(lambda r1, r2: r1.Merge(r2), regions_list)
+
+    output = open("%s.kml" % args.id, "w")
+    KMLFileWriter(output, args.id, region)
+    output.close()
+
+
+def ProcessMBTiles(args, regions_list):
+    if not regions_list:
+        print >> sys.stderr, "Error: city %s is invalid." % args.id
+        return
+
+    if not args.regions:
+        regions_list = [reduce(lambda r1, r2: r1.Merge(r2), regions_list)]
+
+    output = open("%s.sh" % args.id, "w")
+
+    for region in regions_list:
+        region_id = "%03d" % regions_list.index(region)
+        TileScriptFileWriter(output, args.id, region_id, args.upload, region)
+
+    output.close()
+
 def Main():
     parser = argparse.ArgumentParser(
         description="Generates KML or map tiles from IBGE PDFs.")
@@ -86,6 +114,9 @@ def Main():
     group.add_argument("--tiles", action="store_true", help=
             "Generates TIFFs and a shell script that will generate map tiles "
             "using GDAL tools and TileMill when executed.")
+    parser.add_argument("--regions", action="store_true", help=
+            "Create separated .mbtiles for each district within a "
+            "municipality. Might speed up the processing of big areas.")
     parser.add_argument("--upload", action="store_true", help=
             "The generated shell script will also upload the tiles to the "
             "cloud. Make sure to have ~/.tilemill/config.json properly set "
@@ -99,16 +130,6 @@ def Main():
 
     directory = args.directory[0]
 
-    writer = None
-    output_filename = None
-
-    if args.kml:
-        writer = KMLFileWriter
-        output_filename = "%s.kml" % args.id
-    else:
-        writer = TileScriptFileWriter
-        output_filename = "%s.sh" % args.id
-
     map_paths = ScanDirectoryForPDFs(directory)
 
     executor = ProcessPoolExecutor(max_workers=args.jobs)
@@ -120,15 +141,11 @@ def Main():
         if ibge_map:
             maps_list.append(ibge_map)
 
-    region = RegionFactory(maps_list)
-    if args.v:
-        print "Filtered %d images from %d." % (
-                len(maps_list) - len(region.GetRectangles()), len(maps_list))
-
-    output = open(output_filename, "w")
-    writer(output, args.id, region, args.upload)
-    output.close()
-
+    regions_list = RegionFactory(maps_list)
+    if args.kml:
+        ProcessKML(args, regions_list)
+    else:
+        ProcessMBTiles(args, regions_list)
 
 if __name__ == "__main__":
     Main()

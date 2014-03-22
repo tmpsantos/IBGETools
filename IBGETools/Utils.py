@@ -12,7 +12,7 @@ def _GetJinjaTemplate(name):
     return environment.get_template(name)
 
 
-def KMLFileWriter(kml, id, region, _):
+def KMLFileWriter(kml, id, region):
     def ItemList():
         for ibge_map in region.GetRectangles():
             basename = os.path.splitext(os.path.basename(ibge_map.GetPath()))[0]
@@ -30,13 +30,13 @@ def KMLFileWriter(kml, id, region, _):
     kml.write(template.render(item_list=ItemList()))
 
 
-def TileScriptFileWriter(script, id, region, should_upload):
+def TileScriptFileWriter(script, id, region_id, should_upload, region):
     def ItemList():
         for ibge_map in region.GetRectangles():
             basename = os.path.splitext(os.path.basename(ibge_map.GetPath()))[0]
-            name = "%s_%s" % (id, basename)
 
-            item = {"name": name,
+            item = {"name": "%s_%s" % (id, basename),
+                    "vrt_name": "%s_%s_%s" % (id, region_id, basename),
                     "north": ibge_map.GetTop(),
                     "south": ibge_map.GetBottom(),
                     "east": ibge_map.GetRight(),
@@ -48,7 +48,7 @@ def TileScriptFileWriter(script, id, region, should_upload):
     if should_upload:
         config = "%s/.tilemill/config.json" % os.getenv("HOME")
 
-    data = {"id": id,
+    data = {"id": "%s_%s" % (id, region_id),
             "config": config,
             "current_path": os.getcwd(),
             "north": region.GetTop(),

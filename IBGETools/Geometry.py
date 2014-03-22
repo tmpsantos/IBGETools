@@ -154,9 +154,20 @@ def RegionFactory(rects_list):
 
         regions_list = non_overlaping_regions + [merged_region]
 
+    num_regions = len(regions_list)
+    if not num_regions:
+        return []
+
+    filter(lambda r: r.GetWidth() < 4 and r.GetHeight() < 4, regions_list)
+
+    # This is a fatal error, that means the OCR is consistently scanning
+    # wrong coordinates. In theory it should never happen.
+    if len(regions_list) is not num_regions:
+        return []
+
     # Filter all the maps that are not visible (most of them) to
     # reduce tile generation time or memory footprint when loading
     # the .kml.
     map(lambda r: r.FilterHiddenRectangles(), regions_list)
 
-    return reduce(lambda r1, r2: r1.Merge(r2), regions_list)
+    return regions_list

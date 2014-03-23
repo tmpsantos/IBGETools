@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import re
 
 import tesseract
@@ -8,7 +9,14 @@ import tesseract
 class OCR:
     def __init__(self):
         api = tesseract.TessBaseAPI()
-        api.Init(".", "eng", tesseract.OEM_DEFAULT)
+
+        # For some reason, passing the path to Init() was not working,
+        # but setting the environment variable seems to be a workaround.
+        this_directory = os.path.dirname(os.path.realpath(__file__))
+        os.putenv("TESSDATA_PREFIX", this_directory)
+
+        api.Init(".", "ibge", tesseract.OEM_DEFAULT)
+
         api.SetPageSegMode(tesseract.PSM_AUTO)
         api.SetVariable("tessedit_char_whitelist", "-0123456789°'\"")
         api.SetVariable("chs_leading_punct", "-")

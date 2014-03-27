@@ -41,6 +41,10 @@ class OCR:
         except:
             return 0
 
+        # Hack for Limeira - SP
+        if degrees == -2:
+            degrees = -22
+
         if (degrees < 0):
             minutes *= -1
             seconds *= -1

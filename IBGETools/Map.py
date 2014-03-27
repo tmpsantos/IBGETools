@@ -10,9 +10,9 @@ from Geometry import Rectangle
 # This is a naive attempt to find a generic offset and bounding box
 # that should work on every map format. The OFFSET here is the distance
 # in px from the coordinates label to the the rectangle containing the map.
-_BBOX_OFFSET_ = 40
+_BBOX_OFFSET_ = 20
 _BBOX_WIDTH_ = 200
-_BBOX_HEIGHT_ = 40
+_BBOX_HEIGHT_ = 80
 
 # The image object on all IBGE PDFs is indexed
 # at ID 6. We also probe for a few properties.

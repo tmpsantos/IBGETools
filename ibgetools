@@ -141,6 +141,10 @@ def Main():
         if ibge_map:
             maps_list.append(ibge_map)
 
+    if args.v:
+        ratio = len(maps_list) / float(len(map_paths)) * 100.
+        print "%s [Debug] Maps processed: %.2f%%" % (args.id, ratio)
+
     regions_list = RegionFactory(maps_list)
     if args.kml:
         ProcessKML(args, regions_list)

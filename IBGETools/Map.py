@@ -2,7 +2,7 @@ import StringIO
 
 from pdfminer.pdfparser import PDFDocument, PDFParser, PDFStream
 from wand.api import library
-from wand.image import Image
+from wand.image import Color, Image
 
 from OCR import OCR
 from Geometry import Rectangle
@@ -15,6 +15,40 @@ _BBOX_WIDTH_ = 200
 _BBOX_HEIGHT_ = 40
 
 
+def _GetMargins(image):
+    width, height = image.size
+    vslice = image[width / 2:width / 2 + 1, 0:height]
+    hslice = image[height / 2]
+
+    black = Color('#000')
+
+    left = 1
+    for y in hslice:
+        if y == black:
+            break
+        left += 1
+
+    right = 1
+    for y in reversed(hslice):
+        if y == black:
+            break
+        right += 1
+
+    top = 1
+    for row in vslice:
+        if row[0] == black:
+            break
+        top += 1
+
+    bottom = 1
+    for row in reversed(vslice):
+        if row[0] == black:
+            break
+        bottom += 1
+
+    return left, top, right, bottom
+
+
 class Map(Rectangle):
     def __init__(self, map_image, map_path):
         super(Map, self).__init__()
@@ -23,13 +57,17 @@ class Map(Rectangle):
         self._map_path = map_path
         self._ocr = OCR()
 
+        self._margin_left = self.MARGIN_LEFT
+        self._margin_top = self.MARGIN_TOP
+        self._margin_right = self.MARGIN_RIGHT
+        self._margin_bottom = self.MARGIN_BOTTOM
+
         self._x = 0.
         self._y = 0.
         self._width = 0.
         self._height = 0.
 
-        self.GetWidth()
-        self.GetHeight()
+        self._RefreshCoordinates()
 
     def IsValid(self):
         if not self._map_image:
@@ -80,14 +118,17 @@ class Map(Rectangle):
     def GetX(self):
         if self._x:
             return self._x
-
-        x, y, _, _ = self._GetMapGeometry()
+        x, y, map_width, map_height = self._GetMapGeometry()
 
         offset = _BBOX_OFFSET_
         width = _BBOX_WIDTH_
         height = _BBOX_HEIGHT_
 
-        image = self._CropGeometry(x, y - offset - height, width, height)
+        y_offset = y + map_height
+
+        # Getting the X coordinate from the bottom left corner because
+        # it turns out that the upper left is often corrupted.
+        image = self._CropGeometry(x, y_offset + offset, width, height)
         self._x = self._ocr.GetDecimalDegrees(image)
 
         return self._x
@@ -112,18 +153,7 @@ class Map(Rectangle):
         if self._width:
             return self._width
 
-        x, y, map_width, map_height = self._GetMapGeometry()
-
-        offset = _BBOX_OFFSET_
-        width = _BBOX_WIDTH_
-        height = _BBOX_HEIGHT_
-
-        x_offset = x + map_width
-        y_offset = y + map_height
-
-        image = self._CropGeometry(
-                x_offset - width, y_offset + offset, width, height)
-        self._width = self._ocr.GetDecimalDegrees(image) - self.GetX()
+        self._width = self._GetX2() - self.GetX()
 
         return self._width
 
@@ -131,19 +161,7 @@ class Map(Rectangle):
         if self._height:
             return self._height
 
-        x, y, map_width, map_height = self._GetMapGeometry()
-
-        offset = _BBOX_OFFSET_
-        width = _BBOX_HEIGHT_
-        height = _BBOX_WIDTH_
-
-        x_offset = x + map_width
-        y_offset = y + map_height
-
-        image = self._CropGeometry(
-                x_offset + offset, y_offset - height, width, height)
-        image.rotate(90)
-        self._height = abs(self._ocr.GetDecimalDegrees(image) - self.GetY())
+        self._height = abs(self._GetY2() - self.GetY())
 
         return self._height
 
@@ -169,6 +187,77 @@ class Map(Rectangle):
         # generating tiles.
         image.save(filename="%s.tif" % basename)
 
+    def _GetX2(self):
+        x, y, map_width, map_height = self._GetMapGeometry()
+
+        offset = _BBOX_OFFSET_
+        width = _BBOX_WIDTH_
+        height = _BBOX_HEIGHT_
+
+        x_offset = x + map_width
+        y_offset = y + map_height
+
+        image = self._CropGeometry(
+                x_offset - width, y_offset + offset, width, height)
+
+        return self._ocr.GetDecimalDegrees(image)
+
+    def _GetY2(self):
+        x, y, map_width, map_height = self._GetMapGeometry()
+
+        offset = _BBOX_OFFSET_
+        width = _BBOX_HEIGHT_
+        height = _BBOX_WIDTH_
+
+        x_offset = x + map_width
+        y_offset = y + map_height
+
+        image = self._CropGeometry(
+                x_offset + offset, y_offset - height, width, height)
+        image.rotate(90)
+
+        return self._ocr.GetDecimalDegrees(image)
+
+    def _RefreshCoordinates(self):
+        self.GetWidth()
+        self.GetHeight()
+
+        if self.IsValid():
+            return
+
+        # We have some corrupted PDFs with the top margin
+        # misplaced compared to the "sane" PDFs. We try
+        # to detect the margin and ultimately, interpolate
+        # the upper coordinate using degrees per pixel.
+        left, top, right, bottom = _GetMargins(self._map_image)
+
+        self._margin_left = left
+        self._margin_top = top
+        self._margin_right = right
+        self._margin_bottom = bottom
+
+        # Margin detection can really screw up things. I'm being
+        # a bit lazy here and not checking for the scenarios that
+        # can go wrong. Pokemon exception handling FTW.
+        try:
+            self.GetWidth()
+            self.GetHeight()
+        except:
+            return
+
+        if self.IsValid():
+            return
+
+        y2 = self._GetY2()
+        if not y2:
+            return
+
+        pixel_width = self.WIDTH - self._margin_left - self._margin_right
+        pixel_height = self.HEIGHT - self._margin_top - self._margin_bottom
+
+        self._height = self._width / float(pixel_width) * pixel_height
+        self._y = y2 + self._height
+
     def _CropGeometry(self, x1, y1, width, height):
         x2 = x1 + width
         y2 = y1 + height
@@ -176,10 +265,10 @@ class Map(Rectangle):
         return self._map_image[x1:x2, y1:y2]
 
     def _GetMapGeometry(self):
-        width = self.WIDTH - self.MARGIN_LEFT - self.MARGIN_RIGHT
-        height = self.HEIGHT - self.MARGIN_TOP - self.MARGIN_BOTTOM
+        width = self.WIDTH - self._margin_left - self._margin_right
+        height = self.HEIGHT - self._margin_top - self._margin_bottom
 
-        return self.MARGIN_LEFT, self.MARGIN_TOP, width, height
+        return self._margin_left, self._margin_top, width, height
 
 
 # The WIDTH and HEIGHT corresponds to the size of the PDF page. Every document

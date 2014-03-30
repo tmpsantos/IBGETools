@@ -213,7 +213,7 @@ class Map(Rectangle):
             return
 
         pixel_width = self.WIDTH - self.MARGIN_LEFT - self.MARGIN_RIGHT
-        pixel_height = self.HEIGHT - self._margin_top - self.MARGIN_BOTTOM + 2
+        pixel_height = self.HEIGHT - self._margin_top - self.MARGIN_BOTTOM
 
         self._height = self._width / float(pixel_width) * pixel_height
         self._y = self._GetY2() + self._height

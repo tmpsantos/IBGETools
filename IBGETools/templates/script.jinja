@@ -22,6 +22,7 @@ mkdir -p {{ data.current_path }}/project/{{ data.id }}
 cat << 'EOF' > {{ data.current_path }}/project/{{ data.id }}/style.mss
 #{{ data.id }} {
   raster-opacity: 1;
+  raster-scaling: bilinear;
 }
 EOF
 
@@ -63,7 +64,7 @@ EOF
 
 # Create tiles using the .mbtiles format:
 node /usr/share/tilemill/index.js export {{ data.id }} {{ data.id }}.mbtiles --format=mbtiles \
-    --metatile=16 --minzoom=8 --maxzoom=19 --files=. \
+    --metatile=16 --minzoom=5 --maxzoom=19 --files=. \
     --bbox={{ data.west }},{{ data.south }},{{ data.east }},{{ data.north }}
 
 

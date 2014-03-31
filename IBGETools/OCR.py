@@ -31,6 +31,11 @@ class OCR:
         text = self._api.GetUTF8Text().replace(' ', '')
         coordinates = re.split("°|'|\"| ", text)[:3]
 
+        # Do not accept low-quality OCRs, since this can cause
+        # the image to be misplaced, which is worse than discarded.
+        if self._api.MeanTextConf() < 60:
+            return 0
+
         return self._ConvertToDecimalDegrees(coordinates)
 
     def _ConvertToDecimalDegrees(self, coordinates):

@@ -17,23 +17,9 @@ ftp://geoftp.ibge.gov.br/mapas_estatisticos/censo_2010/mapas_de_setores_censitar
 
 ### Install the script dependencies:
 
-Tested on Ubuntu 13.10 Intel 64-bits:
+Tested on Ubuntu 13.10 Intel 64-bits, Debian unstable 64-bits:
 
-* python-jinja2
-
-`$ sudo apt-get install python-jinja2`
-
-* python-pdfminer
-
-`$ sudo apt-get install python-pdfminer`
-
-* python-wand
-
-`$ sudo apt-get install python-wand`
-
-* python-concurrent.futures
-
-`$ sudo apt-get install python-concurrent.futures`
+`$ sudo apt-get install python-jinja2 python-pdfminer python-pdfminer python-wand python-concurrent.futures`
 
 * python-tesseract
 

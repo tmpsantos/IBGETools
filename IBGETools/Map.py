@@ -66,10 +66,10 @@ class Map(Rectangle):
         self._margin_right = self.MARGIN_RIGHT
         self._margin_bottom = self.MARGIN_BOTTOM
 
-        self._x = 0.
-        self._y = 0.
-        self._width = 0.
-        self._height = 0.
+        self._x = OCR.INVALID_COORDINATE
+        self._y = OCR.INVALID_COORDINATE
+        self._width = OCR.INVALID_COORDINATE
+        self._height = OCR.INVALID_COORDINATE
 
         self._RefreshCoordinates()
 
@@ -77,10 +77,10 @@ class Map(Rectangle):
         if not self._map_image:
             return False
 
-        if self._x == 0 or self._y == 0:
-            return False
-
-        if self._width == 0 or self._height == 0:
+        if (self._x == OCR.INVALID_COORDINATE or
+                self._y == OCR.INVALID_COORDINATE or
+                self._width == OCR.INVALID_COORDINATE or
+                self._height == OCR.INVALID_COORDINATE):
             return False
 
         if self._width < 0.001 or self._width > 0.05:
@@ -120,8 +120,9 @@ class Map(Rectangle):
         return self._CropGeometry(*self._GetMapGeometry())
 
     def GetX(self):
-        if self._x:
+        if self._x != OCR.INVALID_COORDINATE:
             return self._x
+
         x, y, map_width, map_height = self._GetMapGeometry()
 
         offset = _BBOX_OFFSET_
@@ -138,7 +139,7 @@ class Map(Rectangle):
         return self._x
 
     def GetY(self):
-        if self._y:
+        if self._y != OCR.INVALID_COORDINATE:
             return self._y
 
         x, y, _, _ = self._GetMapGeometry()
@@ -154,18 +155,22 @@ class Map(Rectangle):
         return self._y
 
     def GetWidth(self):
-        if self._width:
+        if self._width != OCR.INVALID_COORDINATE:
             return self._width
 
-        self._width = self._GetX2() - self.GetX()
+        self._width = self._GetX2()
+        if self._width != OCR.INVALID_COORDINATE:
+            self._width -= self.GetX()
 
         return self._width
 
     def GetHeight(self):
-        if self._height:
+        if self._height != OCR.INVALID_COORDINATE:
             return self._height
 
-        self._height = abs(self._GetY2() - self.GetY())
+        self._height = self._GetY2()
+        if self._height != OCR.INVALID_COORDINATE:
+            self._height = abs(self._height - self.GetY())
 
         return self._height
 
@@ -253,7 +258,7 @@ class Map(Rectangle):
             return
 
         y2 = self._GetY2()
-        if not y2:
+        if y2 == OCR.INVALID_COORDINATE:
             return
 
         pixel_width = self.WIDTH - self._margin_left - self._margin_right

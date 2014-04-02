@@ -7,6 +7,8 @@ import tesseract
 
 
 class OCR:
+    INVALID_COORDINATE = -9999.
+
     def __init__(self):
         api = tesseract.TessBaseAPI()
 
@@ -33,8 +35,8 @@ class OCR:
 
         # Do not accept low-quality OCRs, since this can cause
         # the image to be misplaced, which is worse than discarded.
-        if self._api.MeanTextConf() < 60:
-            return 0
+        if self._api.MeanTextConf() < 50:
+            return self.INVALID_COORDINATE
 
         return self._ConvertToDecimalDegrees(coordinates)
 
@@ -44,7 +46,7 @@ class OCR:
             minutes = float(coordinates[1]) / 60
             seconds = float(coordinates[2]) / 3600
         except:
-            return 0
+            return self.INVALID_COORDINATE
 
         if (degrees < 0):
             minutes *= -1

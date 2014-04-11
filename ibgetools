@@ -132,14 +132,19 @@ def Main():
 
     map_paths = ScanDirectoryForPDFs(directory)
 
-    executor = ProcessPoolExecutor(max_workers=args.jobs)
-    executor_args = [
-            (map_path, args.id, args.kml, args.v) for map_path in map_paths]
-
     maps_list = []
-    for ibge_map in executor.map(ProcessMap, executor_args):
-        if ibge_map:
-            maps_list.append(ibge_map)
+    params = [(map_path, args.id, args.kml, args.v) for map_path in map_paths]
+
+    if args.jobs == 1:
+        for param in params:
+            ibge_map = ProcessMap(param)
+            if ibge_map:
+                maps_list.append(ibge_map)
+    else:
+        executor = ProcessPoolExecutor(max_workers=args.jobs)
+        for ibge_map in executor.map(ProcessMap, params):
+            if ibge_map:
+                maps_list.append(ibge_map)
 
     if args.v:
         ratio = len(maps_list) / float(len(map_paths)) * 100.

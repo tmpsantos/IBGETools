@@ -10,9 +10,9 @@ from Geometry import Rectangle
 # This is a naive attempt to find a generic offset and bounding box
 # that should work on every map format. The OFFSET here is the distance
 # in px from the coordinates label to the the rectangle containing the map.
-_BBOX_OFFSET_ = 40
-_BBOX_WIDTH_ = 200
-_BBOX_HEIGHT_ = 40
+_BBOX_OFFSET_ = 10
+_BBOX_WIDTH_ = 130
+_BBOX_HEIGHT_ = 60
 
 # The image object on all IBGE PDFs is indexed
 # at ID 6. We also probe for a few properties.
@@ -83,10 +83,10 @@ class Map(Rectangle):
                 self._height == OCR.INVALID_COORDINATE):
             return False
 
-        if self._width < 0.001 or self._width > 0.05:
+        if self._width < 0.001 or self._width > 1.0:
             return False
 
-        if self._height < 0.001 or self._height > 0.05:
+        if self._height < 0.001 or self._height > 1.0:
             return False
 
         _, _, width, height = self._GetMapGeometry()
@@ -123,17 +123,13 @@ class Map(Rectangle):
         if self._x != OCR.INVALID_COORDINATE:
             return self._x
 
-        x, y, map_width, map_height = self._GetMapGeometry()
+        x, y, _, _ = self._GetMapGeometry()
 
         offset = _BBOX_OFFSET_
         width = _BBOX_WIDTH_
         height = _BBOX_HEIGHT_
 
-        y_offset = y + map_height
-
-        # Getting the X coordinate from the bottom left corner because
-        # it turns out that the upper left is often corrupted.
-        image = self._CropGeometry(x, y_offset + offset, width, height)
+        image = self._CropGeometry(x, y - offset - height, width, height)
         self._x = self._ocr.GetDecimalDegrees(image)
 
         return self._x
@@ -222,7 +218,7 @@ class Map(Rectangle):
         y_offset = y + map_height
 
         image = self._CropGeometry(
-                x_offset + offset, y_offset - height, width, height)
+                x_offset + offset, y_offset - height + _BBOX_OFFSET_, width, height)
         image.rotate(90)
 
         return self._ocr.GetDecimalDegrees(image)
@@ -287,60 +283,60 @@ class MapA4Portrait(Map):
     WIDTH = 2480
     HEIGHT = 3508
 
-    MARGIN_LEFT = 152
-    MARGIN_RIGHT = 112
-    MARGIN_TOP = 137
-    MARGIN_BOTTOM = 452
+    MARGIN_LEFT = 249
+    MARGIN_RIGHT = 248
+    MARGIN_TOP = 285
+    MARGIN_BOTTOM = 414
 
 
 class MapA4Landscape(Map):
     WIDTH = 3508
     HEIGHT = 2480
 
-    MARGIN_LEFT = 153
-    MARGIN_RIGHT = 135
-    MARGIN_TOP = 157
-    MARGIN_BOTTOM = 451
+    MARGIN_LEFT = 249
+    MARGIN_RIGHT = 236
+    MARGIN_TOP = 284
+    MARGIN_BOTTOM = 390
 
 
 class MapA3Portrait(Map):
     WIDTH = 3508
     HEIGHT = 4961
 
-    MARGIN_LEFT = 248
-    MARGIN_RIGHT = 166
-    MARGIN_TOP = 184
-    MARGIN_BOTTOM = 704
+    MARGIN_LEFT = 237
+    MARGIN_RIGHT = 236
+    MARGIN_TOP = 268
+    MARGIN_BOTTOM = 372
 
 
 class MapA3Landscape(Map):
     WIDTH = 4961
     HEIGHT = 3508
 
-    MARGIN_LEFT = 249
-    MARGIN_RIGHT = 254
-    MARGIN_TOP = 213
-    MARGIN_BOTTOM = 703
+    MARGIN_LEFT = 273
+    MARGIN_RIGHT = 236
+    MARGIN_TOP = 280
+    MARGIN_BOTTOM = 385
 
 
 class MapA2Portrait(Map):
     WIDTH = 4961
     HEIGHT = 7016
 
-    MARGIN_LEFT = 230
-    MARGIN_RIGHT = 174
-    MARGIN_TOP = 283
-    MARGIN_BOTTOM = 899
+    MARGIN_LEFT = 250
+    MARGIN_RIGHT = 242
+    MARGIN_TOP = 346
+    MARGIN_BOTTOM = 375
 
 
 class MapA2Landscape(Map):
     WIDTH = 7016
     HEIGHT = 4961
 
-    MARGIN_LEFT = 230
-    MARGIN_RIGHT = 242
-    MARGIN_TOP = 259
-    MARGIN_BOTTOM = 898
+    MARGIN_LEFT = 226
+    MARGIN_RIGHT = 225
+    MARGIN_TOP = 308
+    MARGIN_BOTTOM = 390
 
 
 class MapA1Portrait(Map):
